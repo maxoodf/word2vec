@@ -47,8 +47,8 @@ word2vec_t::word2vec_t(const std::string &_fileName): m_wordsMap() {
         shift += pos - header + 1;
         header = pos + 1;
         
-        float len = 0.0;
-        const float *syn0 = (const float*) header;
+        wordVectorValue_t len = 0.0;
+        const wordVectorValue_t *syn0 = (const wordVectorValue_t*) header;
         for (auto j = 0; j < layerSize; ++j) {
             wordVector[j] = syn0[j];
             len += syn0[j] * syn0[j];
@@ -57,8 +57,8 @@ word2vec_t::word2vec_t(const std::string &_fileName): m_wordsMap() {
         for (auto j = 0; j < layerSize; ++j) {
             wordVector[j] /= len;
         }
-        header += layerSize * sizeof(float) + 1;
-        shift += layerSize * sizeof(float) + 1;
+        header += layerSize * sizeof(wordVectorValue_t) + 1;
+        shift += layerSize * sizeof(wordVectorValue_t) + 1;
         
         m_wordsMap[word] = wordVector;
     }
@@ -93,14 +93,14 @@ bool word2vec_t::wordVector(const std::string &_word, std::shared_ptr<wordVector
     return true;
 }
 
-float word2vec_t::distance(const std::string &_what, const std::string &_with) const {
+word2vec_t::wordVectorValue_t word2vec_t::distance(const std::string &_what, const std::string &_with) const {
     auto i = m_wordsMap.find(_what);
     auto j = m_wordsMap.find(_with);
     if ((i == m_wordsMap.end()) || ((j == m_wordsMap.end()))) {
         return 0.0;
     }
     
-    float ret = 0.0;
+    wordVectorValue_t ret = 0.0;
     for (std::size_t k = 0; k < i->second.size(); ++k) {
         ret += i->second[k] * j->second[k];
     }

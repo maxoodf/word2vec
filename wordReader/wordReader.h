@@ -33,11 +33,18 @@ public:
 
 class fileMapper_t: public baseMapper_t {
 private:
+    std::string m_fileName;
     int m_fd;
+    bool m_wrFlag;
     
 public:
-    fileMapper_t(const std::string &_fileName);
+    fileMapper_t(const std::string &_fileName, bool _wrFlag = false, off_t _size = 0);
     ~fileMapper_t();
+    
+private:
+    void open();
+    void close();
+    void resize();
 };
 
 template<class mapper_t>

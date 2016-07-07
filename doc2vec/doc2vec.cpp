@@ -14,6 +14,17 @@
 #include "wordReader.h"
 #include "doc2vec.h"
 
+doc2vec_t::doc2vec_t(const word2vec_t &_word2vec, const std::string &_fileName, bool _loadData):
+m_word2vec(_word2vec), m_docsMap(), m_fileName(_fileName) {
+    if (_loadData) {
+        load();
+    }
+}
+
+doc2vec_t::~doc2vec_t() {
+    save();
+}
+
 bool doc2vec_t::docVector(const std::string _docText, docVector_t &_docVector) const {
     stringMapper_t stringMapper(_docText);
     wordReader_t<stringMapper_t> wordReader(stringMapper);
@@ -57,22 +68,26 @@ bool doc2vec_t::docVector(int64_t _id, docVector_t &_docVector) const {
     return true;
 }
 
-bool doc2vec_t::insert(int64_t _id, const std::string &_docText) {
+bool doc2vec_t::insert(int64_t _id, const docVector_t &_docVector) {
     if (m_docsMap.find(_id) != m_docsMap.end()) {
         return false;
     }
     
+    m_docsMap[_id] = _docVector;
+    
+    return true;
+}
+
+bool doc2vec_t::insert(int64_t _id, const std::string &_docText) {
     docVector_t docVec;
     if (!docVector(_docText, docVec)) {
         return false;
     }
     
-    m_docsMap[_id] = docVec;
-    
-    return true;
+    return insert(_id, docVec);
 }
 
-bool doc2vec_t::nearest(int64_t _id, std::vector<int64_t> &_docIDs, std::size_t _amount, float _distance) const {
+bool doc2vec_t::nearest(int64_t _id, std::vector<int64_t> &_docIDs, float _distance, std::size_t _amount) const {
     if (m_docsMap.find(_id) == m_docsMap.end()) {
         return false;
     }
@@ -82,24 +97,24 @@ bool doc2vec_t::nearest(int64_t _id, std::vector<int64_t> &_docIDs, std::size_t 
         return false;
     }
 
-    return nearest(docVec, _docIDs, _amount, _distance);
+    return nearest(docVec, _docIDs, _distance, _amount);
 }
 
 bool doc2vec_t::nearest(const docVector_t &_docVector, std::vector<int64_t> &_docIDs,
-                        std::size_t _amount, float _distance) const {
-    std::multimap<float, int64_t> tmpMap;
+                        float _distance, std::size_t _amount) const {
+    std::multimap<float, int64_t, std::greater<float>> tmpMap;
     for (auto i:m_docsMap) {
         float dist = distance(_docVector, i.second);
         if (dist >= _distance) {
             tmpMap.insert(std::make_pair(dist, i.first));
-            if (tmpMap.size() > _amount) {
-                tmpMap.erase(tmpMap.begin());
-            }
         }
     }
     
     _docIDs.clear();
     for (auto i:tmpMap) {
+        if ((_amount > 0) && (_docIDs.size() == _amount)) {
+            break;
+        }
         _docIDs.push_back(i.second);
     }
     
@@ -130,68 +145,69 @@ float doc2vec_t::distance(const docVector_t &_what, const docVector_t &_with) co
     return std::sqrt(ret);
 }
 
-bool doc2vec_t::save(const std::string &_fileName) const {
-    FILE *fo = fopen(_fileName.c_str(), "wb");
+void doc2vec_t::save() const {
+    off_t fileSize = sizeof(m_docsMap.size()) + sizeof(m_word2vec.wordVectorSize()) + //header
+                     (sizeof(int64_t) + sizeof(word2vec_t::wordVectorValue_t) * m_word2vec.wordVectorSize()) *
+                                                                                                m_docsMap.size();
+    fileMapper_t fileMapper(m_fileName, true, fileSize);
+    uint64_t shift = 0;
+    const char *data = fileMapper.data();
     
-    fprintf(fo, "%ld %ld\n", m_docsMap.size(), m_word2vec.wordVectorSize());
+    std::size_t mapSize = m_docsMap.size();
+    memmove((void *) (data + shift), &mapSize, sizeof(mapSize));
+    shift += sizeof(mapSize);
+
+    std::size_t vecSize = m_word2vec.wordVectorSize();
+    memmove((void *) (data + shift), &vecSize, sizeof(vecSize));
+    shift += sizeof(vecSize);
+    
     for (auto i:m_docsMap) {
-        fwrite(&(i.first), sizeof(i.first), 1, fo);
+        memmove((void *) (data + shift), &(i.first), sizeof(i.first));
+        shift += sizeof(i.first);
         for (auto j:i.second) {
-            fwrite(&j, sizeof(j), 1, fo);
+            memmove((void *) (data + shift), &j, sizeof(j));
+            shift += sizeof(j);
         }
-        fprintf(fo, "\n");
     }
-    fclose(fo);
-    
-    return true;
 }
 
-bool doc2vec_t::load(const std::string &_fileName) {
-    fileMapper_t fileMapper(_fileName);
-    uint64_t fileSize = fileMapper.size();
+void doc2vec_t::load() {
+    fileMapper_t fileMapper(m_fileName);
+    off_t fileSize = fileMapper.size();
+    
+    // header must be hear at least
+    if (fileSize < sizeof(std::size_t) * 2) {
+        throw std::runtime_error("wrong file format");
+    }
     
     uint64_t shift = 0;
-    const char *header = fileMapper.data();
+    const char *data = fileMapper.data();
     
-    const char *pos = static_cast<const char *>(memchr(header, ' ', fileSize));
-    if (pos == NULL) {
-        return false;
+    std::size_t mapSize = 0;
+    memmove(&mapSize, data + shift, sizeof(mapSize));
+    shift += sizeof(mapSize);
+    
+    std::size_t vecSize = m_word2vec.wordVectorSize();
+    memmove(&vecSize, data + shift, sizeof(vecSize));
+    shift += sizeof(vecSize);
+    
+    off_t expFileSize = sizeof(mapSize) + sizeof(vecSize) + //header
+                        (sizeof(int64_t) + sizeof(word2vec_t::wordVectorValue_t) * vecSize) * mapSize; //records
+    if (fileSize != expFileSize) {
+        throw std::runtime_error("wrong file format");
     }
-    std::size_t mapSize = std::stoul(std::string(header, pos - header));
-    shift += pos - header + 1;
-    header = pos + 1;
-    
-    pos = static_cast<const char *>(memchr(header, '\n', fileSize - shift));
-    if (pos == NULL) {
-        return false;
-    }
-    uint16_t layerSize = std::stoi(std::string(header, pos - header));
-    shift += pos - header + 1;
-    header = pos + 1;
-    
-    //    std::cout << vocSize << " " << layerSize << std::endl;
-    
-    docVector_t docVector(layerSize, 0.0);
+
+    docVector_t docVector(vecSize, 0.0);
     for (std::size_t i = 0; i < mapSize; ++i) {
-        const uint64_t *id = (const uint64_t *)header;
-        shift += sizeof(uint64_t);
-        header += sizeof(uint64_t);
-        
-        float len = 0.0;
-        const float *syn0 = (const float*) header;
-        for (auto j = 0; j < layerSize; ++j) {
-            docVector[j] = syn0[j];
-            len += syn0[j] * syn0[j];
+        docsMap_t::key_type key = 0;
+        memmove(&key, data + shift, sizeof(key));
+        shift += sizeof(key);
+        for (std::size_t j = 0; j < vecSize; ++j) {
+            word2vec_t::wordVectorValue_t value = 0;
+            memmove(&value, data + shift, sizeof(value));
+            shift += sizeof(value);
+            docVector[j] = value;
         }
-        len = std::sqrt(len);
-        for (auto j = 0; j < layerSize; ++j) {
-            docVector[j] /= len;
-        }
-        header += layerSize * sizeof(float) + 1;
-        shift += layerSize * sizeof(float) + 1;
-        
-        m_docsMap[*id] = docVector;
+        m_docsMap[key] = docVector;
     }
-    //    std::cout << m_wordsMap.size() << std::endl;
-    return true;
 }

@@ -149,11 +149,11 @@ int main(int argc, char * const *argv) {
     try {
 //        word2vecTrainer_t word2vecTrainer;
 //        word2vecTrainer.train();
-        
-        word2vec_t word2vec("./model.w2v");
-        doc2vecTrainer_t doc2vecTrainer(word2vec);
-        doc2vecTrainer.train(trainFileName);
-        doc2vecTrainer.saveModel("./model.d2v");
+        {
+            word2vec_t word2vec("./model.w2v");
+            doc2vecTrainer_t doc2vecTrainer(word2vec, "./model.d2v");
+            doc2vecTrainer.train(trainFileName);
+        }
 /*
         doc2vec_t doc2vec(word2vec);
         doc2vec.load("./model.d2v");

@@ -19,11 +19,10 @@ private:
     doc2vec_t m_doc2vec;
 
 public:
-    doc2vecTrainer_t(const word2vec_t &_word2vec);
+    doc2vecTrainer_t(const word2vec_t &_word2vec, const std::string &_fileName);
     ~doc2vecTrainer_t();
     
     void train(const std::string &_fileName);
-    void saveModel(const std::string &_fileName);
     
 private:
     

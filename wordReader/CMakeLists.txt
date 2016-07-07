@@ -13,4 +13,5 @@ set(PRJ_WR_SRCS
 include_directories("${PROJECT_BINARY_DIR}")
 include_directories("${PROJECT_INCLUDE_DIR}")
  
-add_library(${PROJECT_NAME} SHARED ${PRJ_WR_SRCS})
+#add_library(${PROJECT_NAME} SHARED ${PRJ_WR_SRCS})
+add_library(${PROJECT_NAME} STATIC ${PRJ_WR_SRCS})

@@ -1,0 +1,5 @@
+# pg_doc2vec extension
+comment = 'support for doc2vec functionality'
+default_version = '1.0.1'
+module_pathname = '$libdir/pg_doc2vec'
+relocatable = true

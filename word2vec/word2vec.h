@@ -16,7 +16,8 @@
 
 class word2vec_t {
 public:
-    using wordVector_t = std::vector<float>;
+    using wordVectorValue_t = float;
+    using wordVector_t = std::vector<wordVectorValue_t>;
     using wordsMap_t = std::unordered_map<std::string, wordVector_t>;
     
 private:
@@ -24,11 +25,11 @@ private:
     
 public:
     word2vec_t(const std::string &_fileName);
-    ~word2vec_t() {;}
+    virtual ~word2vec_t() {;}
     
     std::size_t wordVectorSize() const;
     bool wordVector(const std::string &_word, std::shared_ptr<wordVector_t> &_wordVector) const;
-    float distance(const std::string &_what, const std::string &_with) const;
+    wordVectorValue_t distance(const std::string &_what, const std::string &_with) const;
 };
 
 #endif /* word2vec_h */

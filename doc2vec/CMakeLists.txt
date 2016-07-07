@@ -12,5 +12,6 @@ set(PRJ_D2V_SRCS
 include_directories("${PROJECT_BINARY_DIR}")
 include_directories("${PROJECT_INCLUDE_DIR}")
  
-add_library(${PROJECT_NAME} SHARED ${PRJ_D2V_SRCS})
+#add_library(${PROJECT_NAME} SHARED ${PRJ_D2V_SRCS})
+add_library(${PROJECT_NAME} STATIC ${PRJ_D2V_SRCS})
 target_link_libraries(${PROJECT_NAME} ${LIB_WR} ${LIB_W2V})
