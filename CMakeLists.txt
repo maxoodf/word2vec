@@ -1,7 +1,7 @@
 project (wordvecpp)
 cmake_minimum_required(VERSION 2.6)
  
-set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
+set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
  
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
@@ -31,3 +31,5 @@ add_subdirectory(doc2vec)
 
 include_directories("${PROJECT_SOURCE_DIR}/doc2vec")
 add_subdirectory(doc2vecTrainer)
+
+#add_subdirectory(examples/postgresql)
