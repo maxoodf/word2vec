@@ -20,6 +20,8 @@ extern "C" {
 #include <storage/latch.h>
 #include <fmgr.h>
 #include <utils/builtins.h>
+#include <utils/array.h>
+#include <catalog/pg_type.h>
     
     PG_MODULE_MAGIC;
 }
@@ -37,12 +39,6 @@ namespace pg_d2v {
     static const uint32_t nearestResultMax = NEAREST_RESULT_MAX;
 #endif
     
-#ifndef DOC2VEC_TASK_THREADS
-#error "DOC2VEC_TASK_THREADS must be defined"
-#else
-    static const uint8_t doc2vecThreadNo = DOC2VEC_TASK_THREADS;
-#endif
-    
     static const useconds_t queueWaitTimeoutMax = 1000L; // wait for a record, milliseconds
     
     class inOutQueue_t {
@@ -55,13 +51,12 @@ namespace pg_d2v {
         };
         
         struct nearestInQueueRecord_t {
-            int64_t m_idWhat;
-            int64_t m_idWhith;
+            int64_t m_id;
         };
         
         struct nearestOutQueueRecord_t {
             int64_t m_idWhat;
-            int64_t m_idWhith[nearestResultMax];
+            int64_t m_idWith[nearestResultMax];
         };
         
     private:
@@ -346,11 +341,85 @@ namespace pg_d2v {
             return ret;
         }
         
+        bool setNearestInQueueRecord(int64_t _id) {
+            bool ret = false;
+            if (sem_trywait(m_nearestInQueueSem) == 0) {
+                for (auto i = 0; i < queueRecordsMax; ++i) {
+                    if (m_nearestInQueue[i].m_id == 0) {
+                        m_nearestInQueue[i].m_id = _id;
+                        ret = true;
+                        break;
+                    }
+                }
+                sem_post(m_nearestInQueueSem);
+            }
+            
+            return ret;
+        }
+        
+        int64_t getNearestInQueueRecord() {
+            int64_t ret = 0;
+            if (sem_trywait(m_nearestInQueueSem) == 0) {
+                for (auto i = 0; i < queueRecordsMax; ++i) {
+                    if (m_nearestInQueue[i].m_id != 0) {
+                        ret = m_nearestInQueue[i].m_id;
+                        m_nearestInQueue[i].m_id = 0;
+                        break;
+                    }
+                }
+                sem_post(m_nearestInQueueSem);
+            }
+            
+            return ret;
+        }
+
+        bool setNearestOutQueueRecord(int64_t _id, const std::vector<int64_t> &_nearestRecords) {
+            bool ret = false;
+            if (sem_trywait(m_nearestOutQueueSem) == 0) {
+                for (auto i = 0; i < queueRecordsMax; ++i) {
+                    if (m_nearestOutQueue[i].m_idWhat == 0) {
+                        m_nearestOutQueue[i].m_idWhat = _id;
+                        auto lim = (_nearestRecords.size() < nearestResultMax)?_nearestRecords.size():nearestResultMax;
+                        for (auto j= 0; j < lim; ++j) {
+                            m_nearestOutQueue[i].m_idWith[j] = _nearestRecords[j];
+                        }
+                        ret = true;
+                        break;
+                    }
+                }
+                sem_post(m_nearestOutQueueSem);
+            }
+            
+            return ret;
+        }
+        
+        bool getNearestOutQueueRecord(int64_t _id, std::vector<int64_t> &_nearestRecords) {
+            bool ret = false;
+            if (sem_trywait(m_nearestOutQueueSem) == 0) {
+                for (auto i = 0; i < queueRecordsMax; ++i) {
+                    if (m_nearestOutQueue[i].m_idWhat == _id) {
+                        for (auto j= 0; j < nearestResultMax; ++j) {
+                            if (m_nearestOutQueue[i].m_idWith[j] != 0) {
+                                _nearestRecords.push_back(m_nearestOutQueue[i].m_idWith[j]);
+                                m_nearestOutQueue[i].m_idWith[j] = 0;
+                            }
+                        }
+                        m_nearestOutQueue[i].m_idWhat = 0;
+                        ret = true;
+                        break;
+                    }
+                }
+                sem_post(m_nearestOutQueueSem);
+            }
+            
+            return ret;
+        }
+        
     private:
         
     };
     
-    const uint16_t inOutQueue_t::queueRecordsMax = doc2vecThreadNo * 2;
+    const uint16_t inOutQueue_t::queueRecordsMax = 2;
     
     const char *inOutQueue_t::insertQueueSemName = "/pg_doc2vecInsertQueueSem";
     const char *inOutQueue_t::insertQueueShmName = "/pg_doc2vecInsertQueueShm";
@@ -394,6 +463,7 @@ extern "C" {
             }
             
             word2vec_t word2vec(std::string(SHARE_FOLDER_STR) + "/model.w2v");
+//            doc2vec_t doc2vec(word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", false);
             doc2vec_t doc2vec(word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", true);
 
             pqsignal(SIGTERM, doc2vecSigterm);
@@ -408,6 +478,19 @@ extern "C" {
                 if (id > 0) {
                     doc2vec.insert(id, text);
                     currTimeout = 0;
+                    continue;
+                }
+                
+                std::vector<int64_t> nearest;
+                id = inOutQueue.getNearestInQueueRecord();
+                if (id > 0) {
+                    doc2vec.nearest(id, nearest, 0.98, pg_d2v::nearestResultMax);
+                    while(!inOutQueue.setNearestOutQueueRecord(id, nearest)) {
+                        usleep(1L);
+                    }
+
+                    currTimeout = 0;
+                    continue;
                 }
                 
                 currTimeout = (currTimeout + 1) * 2;
@@ -487,6 +570,43 @@ extern "C" {
             PG_RETURN_NULL();
         }
         
+        try {
+            int64_t _id = PG_GETARG_INT64(0);
+            
+            std::vector<int64_t> nearestRecords;
+            if (_id > 0) {
+                pg_d2v::inOutQueue_t inOutQueue;
+                if (!inOutQueue.isOK()) {
+                    PG_RETURN_INT16(0);
+                }
+                
+                while (!inOutQueue.setNearestInQueueRecord(_id)) {
+                    usleep(1L);
+                }
+                
+                while (!inOutQueue.getNearestOutQueueRecord(_id, nearestRecords)) {
+                    usleep(1L);
+                }
+            }
+            
+            if (nearestRecords.size() > 0) {
+                Datum elements[nearestRecords.size()];
+                int idx = 0;
+                for (auto i:nearestRecords) {
+                    elements[idx] = Int64GetDatum(i);
+                    ++idx;
+                }
+                
+                ArrayType *array = construct_array(elements, nearestRecords.size(), INT8OID, 8, true, 'd');
+                
+                PG_RETURN_ARRAYTYPE_P(array);
+            }
+            PG_RETURN_INT16((int16_t) nearestRecords.size());
+        } catch (const std::exception &_e) {
+            elog(LOG, "DOC2VEC: d2v_insert critical error: %s", _e.what());
+        } catch (...) {
+            elog(LOG, "DOC2VEC: d2v_insert unknown critical error");
+        }
         
         PG_RETURN_NULL();
     }
