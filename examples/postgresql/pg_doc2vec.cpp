@@ -455,16 +455,18 @@ extern "C" {
             proc_exit(1);
         }
         
+        pg_d2v::inOutQueue_t inOutQueue;
+        if (!inOutQueue.isOK()) {
+            elog(ERROR, "DOC2VEC: failed to attach queue");
+            proc_exit(1);
+        }
+
+        word2vec_t *word2vec = nullptr;
+        doc2vec_t *doc2vec = nullptr;
         try {
-            pg_d2v::inOutQueue_t inOutQueue;
-            if (!inOutQueue.isOK()) {
-                elog(ERROR, "DOC2VEC: failed to attach queue");
-                proc_exit(1);
-            }
-            
-            word2vec_t word2vec(std::string(SHARE_FOLDER_STR) + "/model.w2v");
-//            doc2vec_t doc2vec(word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", false);
-            doc2vec_t doc2vec(word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", true);
+            word2vec = new word2vec_t(std::string(SHARE_FOLDER_STR) + "/model.w2v");
+//            doc2vec =  new doc2vec_t(word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", false);
+            doc2vec = new doc2vec_t(*word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", true);
 
             pqsignal(SIGTERM, doc2vecSigterm);
             BackgroundWorkerUnblockSignals();
@@ -476,7 +478,7 @@ extern "C" {
                 std::string text;
                 int64_t id = inOutQueue.getInsertQueueRecord(text);
                 if (id > 0) {
-                    doc2vec.insert(id, text);
+                    doc2vec->insert(id, text);
                     currTimeout = 0;
                     continue;
                 }
@@ -484,7 +486,7 @@ extern "C" {
                 std::vector<int64_t> nearest;
                 id = inOutQueue.getNearestInQueueRecord();
                 if (id > 0) {
-                    doc2vec.nearest(id, nearest, 0.98, pg_d2v::nearestResultMax);
+                    doc2vec->nearest(id, nearest, 0.98, pg_d2v::nearestResultMax);
                     while(!inOutQueue.setNearestOutQueueRecord(id, nearest)) {
                         usleep(1L);
                     }
@@ -506,6 +508,17 @@ extern "C" {
             }
             
             elog(LOG, "DOC2VEC: shutting down");
+        } catch (const errorWR_t &_err) {
+            elog(ERROR, "DOC2VEC: %s", _err.err().c_str());
+        } catch (const std::exception &_err) {
+            elog(ERROR, "DOC2VEC: %s", _err.what());
+        } catch (...) {
+            elog(ERROR, "DOC2VEC: unknown error");
+        }
+
+        try {
+            delete word2vec;
+            delete doc2vec;
         } catch (const errorWR_t &_err) {
             elog(ERROR, "DOC2VEC: %s", _err.err().c_str());
         } catch (const std::exception &_err) {
