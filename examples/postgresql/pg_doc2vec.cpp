@@ -588,49 +588,36 @@ extern "C" {
             
             std::vector<int64_t> nearestRecords;
             if (_id > 0) {
-                elog(LOG, "DOC2VEC: 1");
                 pg_d2v::inOutQueue_t inOutQueue;
                 if (!inOutQueue.isOK()) {
                     PG_RETURN_INT16(0);
                 }
                 
-                elog(LOG, "DOC2VEC: 2");
                 while (!inOutQueue.setNearestInQueueRecord(_id)) {
                     usleep(1L);
                 }
                 
-                elog(LOG, "DOC2VEC: 3");
                 while (!inOutQueue.getNearestOutQueueRecord(_id, nearestRecords)) {
                     usleep(1L);
                 }
             }
             
-            elog(LOG, "DOC2VEC: 4");
             if (nearestRecords.size() > 0) {
-                elog(LOG, "DOC2VEC: 5");
                 Datum elements[nearestRecords.size()];
                 int idx = 0;
-                elog(LOG, "DOC2VEC: 6");
                 for (auto i:nearestRecords) {
-                    elog(LOG, "DOC2VEC: 7");
                     elements[idx] = Int64GetDatum(i);
                     ++idx;
                 }
-                elog(LOG, "DOC2VEC: 8");
                 
                 ArrayType *array = construct_array(elements, nearestRecords.size(), INT8OID, 8, true, 'd');
-                
-                elog(LOG, "DOC2VEC: 9");
                 PG_RETURN_ARRAYTYPE_P(array);
             }
-
-            elog(LOG, "DOC2VEC: 10");
         } catch (const std::exception &_e) {
             elog(LOG, "DOC2VEC: d2v_nearest critical error: %s", _e.what());
         } catch (...) {
             elog(LOG, "DOC2VEC: d2v_nearest unknown critical error");
         }
-        elog(LOG, "DOC2VEC: 11");
         
         PG_RETURN_NULL();
     }
