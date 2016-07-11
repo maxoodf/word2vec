@@ -49,12 +49,15 @@ bool doc2vec_t::docVector(const std::string _docText, docVector_t &_docVector) c
     for (auto i:_docVector) {
         len += i * i;
     }
-    len = std::sqrt(len);
-    for (std::size_t i = 0; i < _docVector.size(); ++i) {
-        _docVector[i] /= len;
+    if (len > 0.0) {
+        len = std::sqrt(len);
+        for (std::size_t i = 0; i < _docVector.size(); ++i) {
+            _docVector[i] /= len;
+        }
+        return true;
+    } else {
+        return false;
     }
-    
-    return true;
 }
 
 bool doc2vec_t::docVector(int64_t _id, docVector_t &_docVector) const {
@@ -141,8 +144,12 @@ float doc2vec_t::distance(const docVector_t &_what, const docVector_t &_with) co
     for (std::size_t k = 0; k < _what.size(); ++k) {
         ret += _what[k] * _with[k];
     }
-    
-    return std::sqrt(ret);
+
+    if (ret > 0.0) {
+        return std::sqrt(ret);
+    } else {
+        return 0.0;
+    }
 }
 
 void doc2vec_t::save() const {

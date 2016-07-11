@@ -53,14 +53,16 @@ word2vec_t::word2vec_t(const std::string &_fileName): m_wordsMap() {
             wordVector[j] = syn0[j];
             len += syn0[j] * syn0[j];
         }
-        len = std::sqrt(len);
-        for (auto j = 0; j < layerSize; ++j) {
-            wordVector[j] /= len;
+        if (len > 0.0) {
+            len = std::sqrt(len);
+            for (auto j = 0; j < layerSize; ++j) {
+                wordVector[j] /= len;
+            }
+        
+            m_wordsMap[word] = wordVector;
         }
         header += layerSize * sizeof(wordVectorValue_t) + 1;
         shift += layerSize * sizeof(wordVectorValue_t) + 1;
-        
-        m_wordsMap[word] = wordVector;
     }
 //    std::cout << m_wordsMap.size() << std::endl;
 }
@@ -105,5 +107,9 @@ word2vec_t::wordVectorValue_t word2vec_t::distance(const std::string &_what, con
         ret += i->second[k] * j->second[k];
     }
     
-    return std::sqrt(ret);
+    if (ret > 0.0) {
+        return std::sqrt(ret);
+    } else {
+        return 0.0;
+    }
 }
