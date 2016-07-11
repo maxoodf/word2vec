@@ -580,7 +580,7 @@ extern "C" {
     PG_FUNCTION_INFO_V1(d2v_nearest);
     Datum d2v_nearest(PG_FUNCTION_ARGS) {
         if (PG_ARGISNULL(0)) {
-            PG_RETURN_NULL();
+            PG_RETURN_ARRAYTYPE_P(NULL);
         }
         
         try {
@@ -614,13 +614,14 @@ extern "C" {
                 
                 PG_RETURN_ARRAYTYPE_P(array);
             }
-            PG_RETURN_INT16((int16_t) nearestRecords.size());
+
+            PG_RETURN_ARRAYTYPE_P(NULL);
         } catch (const std::exception &_e) {
             elog(LOG, "DOC2VEC: d2v_insert critical error: %s", _e.what());
         } catch (...) {
             elog(LOG, "DOC2VEC: d2v_insert unknown critical error");
         }
         
-        PG_RETURN_NULL();
+        PG_RETURN_ARRAYTYPE_P(NULL);
     }
 }
