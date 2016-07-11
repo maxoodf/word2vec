@@ -465,7 +465,7 @@ extern "C" {
         doc2vec_t *doc2vec = nullptr;
         try {
             word2vec = new word2vec_t(std::string(SHARE_FOLDER_STR) + "/model.w2v");
-//            doc2vec =  new doc2vec_t(word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", false);
+//            doc2vec =  new doc2vec_t(*word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", false);
             doc2vec = new doc2vec_t(*word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", true);
 
             pqsignal(SIGTERM, doc2vecSigterm);
@@ -517,8 +517,8 @@ extern "C" {
         }
 
         try {
-            delete word2vec;
             delete doc2vec;
+            delete word2vec;
         } catch (const errorWR_t &_err) {
             elog(ERROR, "DOC2VEC: %s", _err.err().c_str());
         } catch (const std::exception &_err) {
