@@ -19,7 +19,7 @@ static const uint8_t MAX_EXP = 6;
 static const uint8_t MAX_STRING = 32;
 static const uint8_t MAX_CODE_LENGTH = 40;
 static const uint64_t UNIGRAM_TABLE_SIZE = 1e8;
-static const uint16_t MAX_SENTENCE_LENGTH = 16384;
+static const uint16_t MAX_SENTENCE_LENGTH = 32768;
 
 std::string trainFileName;
 std::string modelFileName;
@@ -88,9 +88,9 @@ void word2vecTrainer_t::loadWords(const std::string &_fileName) {
     m_wordsMap.erase(ciWM);
     ciWM = m_wordsMap.begin();
     while (ciWM != m_wordsMap.end()) {
-        //        std::cout << ciWM->first << ": " << ciWM->second.m_freq << std::endl;
+//        std::cout << ciWM->first << ": " << ciWM->second.m_freq << std::endl;
         if (ciWM->second.m_freq < minWordFreq) {
-            //            std::cout << ciWM->first << ": " << ciWM->second.m_freq << std::endl;
+//            std::cout << ciWM->first << ": " << ciWM->second.m_freq << std::endl;
             m_wordsMap.erase(ciWM++);
         } else {
             m_voc.push_back(vocRec_t(ciWM->second.m_freq, ciWM->first));
@@ -102,7 +102,8 @@ void word2vecTrainer_t::loadWords(const std::string &_fileName) {
     
     for (std::size_t i = 0; i < m_voc.size(); ++i) {
         m_wordsMap[m_voc[i].m_word].m_idx = i;
-        //        std::cout << m_voc[i].m_word << ": " << m_voc[i].m_cn << std::endl;
+//        std::cout << m_voc[i].m_word << ": " << m_voc[i].m_cn << std::endl;
+//        std::cout << m_voc[i].m_word << std::endl;
     }
 }
 

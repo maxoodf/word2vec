@@ -7,6 +7,8 @@
 #include <sys/mman.h>
 
 #include <string>
+#include <thread>
+#include <mutex>
 
 #include <word2vec.h>
 #include <doc2vec.h>
@@ -419,7 +421,7 @@ namespace pg_d2v {
         
     };
     
-    const uint16_t inOutQueue_t::queueRecordsMax = 2;
+    const uint16_t inOutQueue_t::queueRecordsMax = 6;
     
     const char *inOutQueue_t::insertQueueSemName = "/pg_doc2vecInsertQueueSem";
     const char *inOutQueue_t::insertQueueShmName = "/pg_doc2vecInsertQueueShm";
@@ -429,6 +431,102 @@ namespace pg_d2v {
     
     const char *inOutQueue_t::nearestOutQueueSemName = "/pg_doc2vecNearestOutQueueSem";
     const char *inOutQueue_t::nearestOutQueueShmName = "/pg_doc2vecNearestOutQueueShm";
+    
+#ifndef SHARE_FOLDER
+#error "SHARE_FOLDER must be defined"
+#else
+#define xstr(s) str(s)
+#define str(s) #s
+#define SHARE_FOLDER_STR xstr(SHARE_FOLDER)
+#endif
+
+    class d2vProcessor_t {
+    private:
+        std::atomic_flag m_ExitLocker = ATOMIC_FLAG_INIT;
+        bool m_terminated;
+        word2vec_t m_word2vec;
+        doc2vec_t m_doc2vec;
+        std::mutex m_d2vMutex;
+        
+    public:
+        d2vProcessor_t(): m_terminated(false),
+                        m_word2vec(std::string(SHARE_FOLDER_STR) + "/model.w2v"),
+                        m_doc2vec(m_word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", true),
+                        m_d2vMutex() {
+        }
+        
+        ~d2vProcessor_t() {
+        }
+        
+        void terminate() {
+            while (m_ExitLocker.test_and_set(std::memory_order_acquire));
+            m_terminated = true;
+            m_ExitLocker.clear(std::memory_order_release);
+        }
+        
+        void insertThread() {
+            inOutQueue_t inOutQueue;
+            if (!inOutQueue.isOK()) {
+                return;
+            }
+            
+            useconds_t currSleepTime = 1L;
+            while (!terminated()) {
+                std::string text;
+                int64_t id = inOutQueue.getInsertQueueRecord(text);
+                if (id > 0) {
+                    std::lock_guard<std::mutex> lock(m_d2vMutex);
+                    m_doc2vec.insert(id, text);
+                    currSleepTime = 1L;
+                } else {
+                    currSleepTime *= 2L;
+                    if (currSleepTime > queueWaitTimeoutMax) {
+                        currSleepTime = queueWaitTimeoutMax;
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(currSleepTime));
+                }
+            }
+        }
+        
+        void nearestIDsThread() {
+            inOutQueue_t inOutQueue;
+            if (!inOutQueue.isOK()) {
+                return;
+            }
+            
+            useconds_t currSleepTime = 1L;
+            while (!terminated()) {
+                std::vector<int64_t> nearest;
+                int64_t id = inOutQueue.getNearestInQueueRecord();
+                if (id > 0) {
+                    {
+                        std::lock_guard<std::mutex> lock(m_d2vMutex);
+                        m_doc2vec.nearest(id, nearest, 0.98, pg_d2v::nearestResultMax);
+                    }
+                    while(!inOutQueue.setNearestOutQueueRecord(id, nearest)) {
+                        usleep(1L);
+                    }
+                    currSleepTime = 1L;
+                } else {
+                    currSleepTime *= 2;
+                    if (currSleepTime > queueWaitTimeoutMax) {
+                        currSleepTime = queueWaitTimeoutMax;
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(currSleepTime));
+                }
+            }
+        }
+        
+    private:
+        bool terminated() {
+            bool ret = false;
+            while (m_ExitLocker.test_and_set(std::memory_order_acquire));
+            ret = m_terminated;
+            m_ExitLocker.clear(std::memory_order_release);
+            
+            return ret;
+        }
+    };
 }
 
 extern "C" {
@@ -441,73 +539,45 @@ extern "C" {
         errno = save_errno;
     }
     
-#ifndef SHARE_FOLDER
-#error "SHARE_FOLDER must be defined"
-#else
-#define xstr(s) str(s)
-#define str(s) #s
-#define SHARE_FOLDER_STR xstr(SHARE_FOLDER)
-#endif
-    
     void mainDoc2VecProc(Datum) {
         if (!pg_d2v::inOutQueue_t::init()) {
             elog(ERROR, "DOC2VEC: queue initialisation failed");
             proc_exit(1);
         }
         
-        pg_d2v::inOutQueue_t inOutQueue;
-        if (!inOutQueue.isOK()) {
-            elog(ERROR, "DOC2VEC: failed to attach queue");
-            proc_exit(1);
-        }
 
-        word2vec_t *word2vec = nullptr;
-        doc2vec_t *doc2vec = nullptr;
         try {
-            word2vec = new word2vec_t(std::string(SHARE_FOLDER_STR) + "/model.w2v");
-//            doc2vec =  new doc2vec_t(*word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", false);
-            doc2vec = new doc2vec_t(*word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", true);
+            pg_d2v::d2vProcessor_t d2vProcessor;
 
+            std::vector<std::thread> insertThreads;
+            for (auto i = 0; i < 2; ++i) {
+                insertThreads.push_back(std::thread(&pg_d2v::d2vProcessor_t::insertThread, &d2vProcessor));
+            }
+
+            std::vector<std::thread> nearestIDsThreads;
+            for (auto i = 0; i < 6; ++i) {
+                nearestIDsThreads.push_back(std::thread(&pg_d2v::d2vProcessor_t::nearestIDsThread, &d2vProcessor));
+            }
+            
             pqsignal(SIGTERM, doc2vecSigterm);
             BackgroundWorkerUnblockSignals();
             
             elog(LOG, "DOC2VEC: initialized");
             
-            long currTimeout = 0;
             while (!doc2vecTerminated) {
-                std::string text;
-                int64_t id = inOutQueue.getInsertQueueRecord(text);
-                if (id > 0) {
-                    doc2vec->insert(id, text);
-                    currTimeout = 0;
-                    continue;
-                }
-                
-                std::vector<int64_t> nearest;
-                id = inOutQueue.getNearestInQueueRecord();
-                if (id > 0) {
-                    doc2vec->nearest(id, nearest, 0.98, pg_d2v::nearestResultMax);
-                    while(!inOutQueue.setNearestOutQueueRecord(id, nearest)) {
-                        usleep(1L);
-                    }
-
-                    currTimeout = 0;
-                    continue;
-                }
-                
-                currTimeout = (currTimeout + 1) * 2;
-                if (currTimeout > pg_d2v::queueWaitTimeoutMax) {
-                    currTimeout = pg_d2v::queueWaitTimeoutMax;
-                }
-                
-                int rc = WaitLatch(MyLatch, WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH, currTimeout);
+                int rc = WaitLatch(MyLatch, WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH, 1000L);
                 ResetLatch(MyLatch);
                 if (rc & WL_POSTMASTER_DEATH) {
                     break;
                 }
             }
-            
-            elog(LOG, "DOC2VEC: shutting down");
+            d2vProcessor.terminate();
+            for (auto &i:insertThreads) {
+                i.join();
+            }
+            for (auto &i:nearestIDsThreads) {
+                i.join();
+            }
         } catch (const errorWR_t &_err) {
             elog(ERROR, "DOC2VEC: %s", _err.err().c_str());
         } catch (const std::exception &_err) {
@@ -516,16 +586,7 @@ extern "C" {
             elog(ERROR, "DOC2VEC: unknown error");
         }
 
-        try {
-            delete doc2vec;
-            delete word2vec;
-        } catch (const errorWR_t &_err) {
-            elog(ERROR, "DOC2VEC: %s", _err.err().c_str());
-        } catch (const std::exception &_err) {
-            elog(ERROR, "DOC2VEC: %s", _err.what());
-        } catch (...) {
-            elog(ERROR, "DOC2VEC: unknown error");
-        }
+        elog(LOG, "DOC2VEC: shutting down");
         
         pg_d2v::inOutQueue_t::release();
         proc_exit(0);
