@@ -446,13 +446,13 @@ namespace pg_d2v {
         bool m_terminated;
         word2vec_t m_word2vec;
         doc2vec_t m_doc2vec;
-        std::mutex m_d2vMutex;
+//        std::mutex m_d2vMutex;
         
     public:
         d2vProcessor_t(): m_terminated(false),
                         m_word2vec(std::string(SHARE_FOLDER_STR) + "/model.w2v"),
-                        m_doc2vec(m_word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", true),
-                        m_d2vMutex() {
+                        m_doc2vec(m_word2vec, std::string(SHARE_FOLDER_STR) + "/model.d2v", true) {
+//                        m_d2vMutex() {
         }
         
         ~d2vProcessor_t() {
@@ -475,7 +475,7 @@ namespace pg_d2v {
                 std::string text;
                 int64_t id = inOutQueue.getInsertQueueRecord(text);
                 if (id > 0) {
-                    std::lock_guard<std::mutex> lock(m_d2vMutex);
+//                    std::lock_guard<std::mutex> lock(m_d2vMutex);
                     m_doc2vec.insert(id, text);
                     currSleepTime = 1L;
                 } else {
@@ -500,7 +500,7 @@ namespace pg_d2v {
                 int64_t id = inOutQueue.getNearestInQueueRecord();
                 if (id > 0) {
                     {
-                        std::lock_guard<std::mutex> lock(m_d2vMutex);
+//                        std::lock_guard<std::mutex> lock(m_d2vMutex);
                         m_doc2vec.nearest(id, nearest, 0.98, pg_d2v::nearestResultMax);
                     }
                     while(!inOutQueue.setNearestOutQueueRecord(id, nearest)) {
