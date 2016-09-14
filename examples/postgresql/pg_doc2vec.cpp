@@ -9,7 +9,8 @@
 #include <string>
 #include <thread>
 #include <mutex>
-#include <shared_mutex>
+#include <random>
+#include <limits>
 
 #include <word2vec.h>
 #include <doc2vec.h>
@@ -56,6 +57,7 @@ namespace pg_d2v {
         struct nearestInQueueRecord_t {
             int64_t m_id;
             float m_distance;
+            char m_text[docLengthMax];
         };
         
         struct nearestOutQueueRecord_t {
@@ -72,6 +74,8 @@ namespace pg_d2v {
         
         static const char *nearestOutQueueSemName;
         static const char *nearestOutQueueShmName;
+        
+        static const char *delimChars;
         
         sem_t *m_insertQueueSem;
         sem_t *m_nearestInQueueSem;
@@ -308,7 +312,6 @@ namespace pg_d2v {
                         
                         std::string text = _text;
                         if (text.length() > docLengthMax - 1) {
-                            const char delimChars[] = " .,!@#$%^&*()_-+={[}];:'\"~`<>?/\n\t";
                             std::size_t pos = text.find_last_of(delimChars, docLengthMax - 2, 1);
                             if (pos == std::string::npos) {
                                 pos = docLengthMax - 2;
@@ -345,13 +348,26 @@ namespace pg_d2v {
             return ret;
         }
         
-        bool setNearestInQueueRecord(int64_t _id, float _distance) {
+        bool setNearestInQueueRecord(int64_t _id, float _distance, const char *_text = nullptr) {
             bool ret = false;
             if (sem_trywait(m_nearestInQueueSem) == 0) {
                 for (auto i = 0; i < queueRecordsMax; ++i) {
                     if (m_nearestInQueue[i].m_id == 0) {
                         m_nearestInQueue[i].m_id = _id;
                         m_nearestInQueue[i].m_distance = _distance;
+                        
+                        if (_text != nullptr) {
+                            std::string text = _text;
+                            if (text.length() > docLengthMax - 1) {
+                                std::size_t pos = text.find_last_of(delimChars, docLengthMax - 2, 1);
+                                if (pos == std::string::npos) {
+                                    pos = docLengthMax - 2;
+                                }
+                                text = text.substr(0, pos + 1);
+                            }
+                            strncpy(m_nearestInQueue[i].m_text, text.c_str(), docLengthMax - 1);
+                        }
+                        
                         ret = true;
                         break;
                     }
@@ -362,14 +378,16 @@ namespace pg_d2v {
             return ret;
         }
         
-        int64_t getNearestInQueueRecord(int64_t &_id, float &_distance) {
+        int64_t getNearestInQueueRecord(int64_t &_id, float &_distance, std::string &_text) {
             int64_t ret = 0;
             if (sem_trywait(m_nearestInQueueSem) == 0) {
                 for (auto i = 0; i < queueRecordsMax; ++i) {
                     if (m_nearestInQueue[i].m_id != 0) {
                         ret = _id = m_nearestInQueue[i].m_id;
                         _distance = m_nearestInQueue[i].m_distance;
+                        _text = m_nearestInQueue[i].m_text;
                         m_nearestInQueue[i].m_id = 0;
+                        bzero((void *) m_nearestInQueue[i].m_text, docLengthMax);
                         break;
                     }
                 }
@@ -435,6 +453,9 @@ namespace pg_d2v {
     
     const char *inOutQueue_t::nearestOutQueueSemName = "/pg_doc2vecNearestOutQueueSem";
     const char *inOutQueue_t::nearestOutQueueShmName = "/pg_doc2vecNearestOutQueueShm";
+    
+    const char *inOutQueue_t::delimChars = " .,!@#$%^&*()_-+={[}];:'\"~`<>?/\n\t";
+
     
 #ifndef SHARE_FOLDER
 #error "SHARE_FOLDER must be defined"
@@ -503,10 +524,18 @@ namespace pg_d2v {
                 std::vector<int64_t> nearest;
                 int64_t id = 0;
                 float distance = 0.0;
-                if (inOutQueue.getNearestInQueueRecord(id, distance) > 0) {
+                std::string text;
+                if (inOutQueue.getNearestInQueueRecord(id, distance, text) > 0) {
                     {
 //                        std::shared_lock<std::shared_mutex> lock(m_d2vMutex);
-                        m_doc2vec.nearest(id, nearest, distance, pg_d2v::nearestResultMax);
+                        if (text.length() > 0) {
+                            doc2vec_t::docVector_t docVector;
+                            if (m_doc2vec.docVector(text, docVector)) {
+                                m_doc2vec.nearest(docVector, nearest, distance, pg_d2v::nearestResultMax);
+                            }
+                        } else {
+                            m_doc2vec.nearest(id, nearest, distance, pg_d2v::nearestResultMax);
+                        }
                     }
                     while(!inOutQueue.setNearestOutQueueRecord(id, nearest)) {
                         usleep(1L);
@@ -643,8 +672,61 @@ extern "C" {
         PG_RETURN_BOOL(false);
     }
 
-    PG_FUNCTION_INFO_V1(d2v_nearest);
-    Datum d2v_nearest(PG_FUNCTION_ARGS) {
+    PG_FUNCTION_INFO_V1(d2v_nearest_by_text);
+    Datum d2v_nearest_by_text(PG_FUNCTION_ARGS) {
+        if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) {
+            PG_RETURN_NULL();
+        }
+        
+        try {
+            text *_line = PG_GETARG_TEXT_P(0);
+            std::string line(VARDATA(_line), VARSIZE(_line) - VARHDRSZ);
+
+            float _distance = PG_GETARG_FLOAT4(1);
+            
+            std::vector<int64_t> nearestRecords;
+            if (line.length() > 0) {
+                pg_d2v::inOutQueue_t inOutQueue;
+                if (!inOutQueue.isOK()) {
+                    PG_RETURN_INT16(0);
+                }
+                
+                std::random_device rd;
+                std::mt19937 gen(rd());
+                std::uniform_int_distribution<> dis(1, std::numeric_limits<int>::max());
+                int64_t id = dis(gen);
+                
+                while (!inOutQueue.setNearestInQueueRecord(id, _distance, line.c_str())) {
+                    usleep(1L);
+                }
+                
+                while (!inOutQueue.getNearestOutQueueRecord(id, nearestRecords)) {
+                    usleep(1L);
+                }
+            }
+            
+            if (nearestRecords.size() > 0) {
+                Datum elements[nearestRecords.size()];
+                int idx = 0;
+                for (auto i:nearestRecords) {
+                    elements[idx] = Int64GetDatum(i);
+                    ++idx;
+                }
+                
+                ArrayType *array = construct_array(elements, nearestRecords.size(), INT8OID, 8, true, 'd');
+                PG_RETURN_ARRAYTYPE_P(array);
+            }
+        } catch (const std::exception &_e) {
+            elog(LOG, "DOC2VEC: d2v_nearest critical error: %s", _e.what());
+        } catch (...) {
+            elog(LOG, "DOC2VEC: d2v_nearest unknown critical error");
+        }
+        
+        PG_RETURN_NULL();
+    }
+
+    PG_FUNCTION_INFO_V1(d2v_nearest_by_id);
+    Datum d2v_nearest_by_id(PG_FUNCTION_ARGS) {
         if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) {
             PG_RETURN_NULL();
         }

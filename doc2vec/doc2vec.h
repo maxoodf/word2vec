@@ -25,7 +25,7 @@ public:
     doc2vec_t(const word2vec_t &_word2vec, const std::string &_fileName, bool _loadData = false);
     virtual ~doc2vec_t();
     
-    bool docVector(const std::string _docText, docVector_t &_docVector) const;
+    bool docVector(const std::string &_docText, docVector_t &_docVector) const;
     bool docVector(int64_t _id, docVector_t &_docVector) const;
 
     bool insert(int64_t _id, const docVector_t &_docVector);

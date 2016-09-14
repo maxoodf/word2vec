@@ -25,7 +25,7 @@ doc2vec_t::~doc2vec_t() {
     save();
 }
 
-bool doc2vec_t::docVector(const std::string _docText, docVector_t &_docVector) const {
+bool doc2vec_t::docVector(const std::string &_docText, docVector_t &_docVector) const {
     stringMapper_t stringMapper(_docText);
     wordReader_t<stringMapper_t> wordReader(stringMapper);
     
