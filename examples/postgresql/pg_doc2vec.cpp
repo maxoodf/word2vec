@@ -526,17 +526,15 @@ namespace pg_d2v {
                 float distance = 0.0;
                 std::string text;
                 if (inOutQueue.getNearestInQueueRecord(id, distance, text) > 0) {
-                    {
-//                        std::shared_lock<std::shared_mutex> lock(m_d2vMutex);
-                        if (text.length() > 0) {
-                            doc2vec_t::docVector_t docVector;
-                            if (m_doc2vec.docVector(text, docVector)) {
-                                m_doc2vec.nearest(docVector, nearest, distance, pg_d2v::nearestResultMax);
-                            }
-                        } else {
-                            m_doc2vec.nearest(id, nearest, distance, pg_d2v::nearestResultMax);
+                    if (text.length() > 0) {
+                        doc2vec_t::docVector_t docVector;
+                        if (m_doc2vec.docVector(text, docVector)) {
+                            m_doc2vec.nearest(docVector, nearest, distance, pg_d2v::nearestResultMax);
                         }
+                    } else {
+                        m_doc2vec.nearest(id, nearest, distance, pg_d2v::nearestResultMax);
                     }
+
                     while(!inOutQueue.setNearestOutQueueRecord(id, nearest)) {
                         usleep(1L);
                     }
