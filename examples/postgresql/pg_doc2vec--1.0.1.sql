@@ -4,6 +4,6 @@ CREATE FUNCTION d2v_insert(int8, text) RETURNS boolean
 AS '$libdir/pg_doc2vec'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION d2v_nearest(int8) RETURNS int8[]
+CREATE FUNCTION d2v_nearest(int8, float4) RETURNS int8[]
 AS '$libdir/pg_doc2vec'
 LANGUAGE C IMMUTABLE STRICT;

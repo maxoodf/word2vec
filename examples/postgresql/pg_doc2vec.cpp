@@ -9,6 +9,7 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include <shared_mutex>
 
 #include <word2vec.h>
 #include <doc2vec.h>
@@ -54,6 +55,7 @@ namespace pg_d2v {
         
         struct nearestInQueueRecord_t {
             int64_t m_id;
+            float m_distance;
         };
         
         struct nearestOutQueueRecord_t {
@@ -343,12 +345,13 @@ namespace pg_d2v {
             return ret;
         }
         
-        bool setNearestInQueueRecord(int64_t _id) {
+        bool setNearestInQueueRecord(int64_t _id, float _distance) {
             bool ret = false;
             if (sem_trywait(m_nearestInQueueSem) == 0) {
                 for (auto i = 0; i < queueRecordsMax; ++i) {
                     if (m_nearestInQueue[i].m_id == 0) {
                         m_nearestInQueue[i].m_id = _id;
+                        m_nearestInQueue[i].m_distance = _distance;
                         ret = true;
                         break;
                     }
@@ -359,12 +362,13 @@ namespace pg_d2v {
             return ret;
         }
         
-        int64_t getNearestInQueueRecord() {
+        int64_t getNearestInQueueRecord(int64_t &_id, float &_distance) {
             int64_t ret = 0;
             if (sem_trywait(m_nearestInQueueSem) == 0) {
                 for (auto i = 0; i < queueRecordsMax; ++i) {
                     if (m_nearestInQueue[i].m_id != 0) {
-                        ret = m_nearestInQueue[i].m_id;
+                        ret = _id = m_nearestInQueue[i].m_id;
+                        _distance = m_nearestInQueue[i].m_distance;
                         m_nearestInQueue[i].m_id = 0;
                         break;
                     }
@@ -442,11 +446,11 @@ namespace pg_d2v {
 
     class d2vProcessor_t {
     private:
-        std::atomic_flag m_ExitLocker = ATOMIC_FLAG_INIT;
+        mutable std::atomic_flag m_ExitLocker = ATOMIC_FLAG_INIT;
         bool m_terminated;
-        word2vec_t m_word2vec;
+        const word2vec_t m_word2vec;
         doc2vec_t m_doc2vec;
-//        std::mutex m_d2vMutex;
+//        mutable std::shared_mutex m_d2vMutex;
         
     public:
         d2vProcessor_t(): m_terminated(false),
@@ -475,7 +479,7 @@ namespace pg_d2v {
                 std::string text;
                 int64_t id = inOutQueue.getInsertQueueRecord(text);
                 if (id > 0) {
-//                    std::lock_guard<std::mutex> lock(m_d2vMutex);
+//                    std::unique_lock<std::shared_mutex> lock(m_d2vMutex);
                     m_doc2vec.insert(id, text);
                     currSleepTime = 1L;
                 } else {
@@ -497,11 +501,12 @@ namespace pg_d2v {
             useconds_t currSleepTime = 1L;
             while (!terminated()) {
                 std::vector<int64_t> nearest;
-                int64_t id = inOutQueue.getNearestInQueueRecord();
-                if (id > 0) {
+                int64_t id = 0;
+                float distance = 0.0;
+                if (inOutQueue.getNearestInQueueRecord(id, distance) > 0) {
                     {
-//                        std::lock_guard<std::mutex> lock(m_d2vMutex);
-                        m_doc2vec.nearest(id, nearest, 0.98, pg_d2v::nearestResultMax);
+//                        std::shared_lock<std::shared_mutex> lock(m_d2vMutex);
+                        m_doc2vec.nearest(id, nearest, distance, pg_d2v::nearestResultMax);
                     }
                     while(!inOutQueue.setNearestOutQueueRecord(id, nearest)) {
                         usleep(1L);
@@ -518,7 +523,7 @@ namespace pg_d2v {
         }
         
     private:
-        bool terminated() {
+        bool terminated() const {
             bool ret = false;
             while (m_ExitLocker.test_and_set(std::memory_order_acquire));
             ret = m_terminated;
@@ -640,12 +645,13 @@ extern "C" {
 
     PG_FUNCTION_INFO_V1(d2v_nearest);
     Datum d2v_nearest(PG_FUNCTION_ARGS) {
-        if (PG_ARGISNULL(0)) {
+        if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) {
             PG_RETURN_NULL();
         }
         
         try {
             int64_t _id = PG_GETARG_INT64(0);
+            float _distance = PG_GETARG_FLOAT4(1);
             
             std::vector<int64_t> nearestRecords;
             if (_id > 0) {
@@ -654,7 +660,7 @@ extern "C" {
                     PG_RETURN_INT16(0);
                 }
                 
-                while (!inOutQueue.setNearestInQueueRecord(_id)) {
+                while (!inOutQueue.setNearestInQueueRecord(_id, _distance)) {
                     usleep(1L);
                 }
                 
