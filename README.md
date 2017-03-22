@@ -19,6 +19,7 @@ Execute the following commands:
 1. `git clone https://github.com/maxoodf/word2vec.git word2vec++`
 2. `cd word2vec++`
 3. `mkdir build`
+4. `cd build`
 4. `cmake -DCMAKE_BUILD_TYPE=Release ../`
 5. `make`
 6. `cd ../`
