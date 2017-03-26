@@ -47,7 +47,7 @@ The following training parameters are available.
 * `-d [chars]` or `--word-delimiter [chars]` - words delimiter chars, default chars are " \n,.-!?:;/\"#$%&'()\*+<=>@[]\\^\_\`{|}~\t\v\f\r". Note, end of sentence chars must be included in word delimiters. Optional parameter.
 * `-v` or `--verbose` - show training process details, default is false. Optional parameter.
 
-For example, train the model from corpus.txt file and save it to model.w2v. Use Skip-Gram & Negative Sampling, vector size 500, downsampling threshold 1e-5, 3 iterations, all other parameters by default:
+For example, train the model from corpus.txt file and save it to model.w2v. Use Skip-Gram & Negative Sampling, vector size 500, downsampling threshold 1e-5, 3 iterations, all other parameters by default: 
 `./w2v_trainer -f ./corpus.txt -o ./model.w2v -g -n 10 -s 500 -l 1e-5 -i 3`
 
 ### Basic usage
