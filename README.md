@@ -40,12 +40,15 @@ The following training parameters are available.
 * `-w [value]` or `--window [value]` - nearby words frame or window, default value is 5. It defines how many words we will include in training of the word inside of corpus - [value] words behind and [value] words ahead ([value]\*2 in total). Optional parameter.
 * `-l [value]` or `--sample [value]` - threshold for occurrence of words, default value is 1e-3. Those that appear with higher frequency in the training data will be randomly down-sampled. You can find more details in [Subsampling (down-sampling)](#subsampling-down-sampling) section. Optional parameter.
 * `-a [value]` or `--alpha [value]` - starting learning rate, default value is 0.05. Optional parameter.
-* `-i [value]` or `--iter [value]` - number of training iterations, default value is 5. More iterations makes a more precise model computational cost is linearly proportional to iterations. Optional parameter.
+* `-i [value]` or `--iter [value]` - number of training iterations, default value is 5. More iterations makes a more precise model, but computational cost is linearly proportional to iterations. Optional parameter.
 * `-t [value]` or `--threads [value]` -  number of training threads, default value is 12. Optional parameter.
 * `-m [value]` or `--min-word-freq [value]` - exclude words that appear less than [value] times from vocabulary, default value is 5. Optional parameter.
 * `-e [chars]` or `--end-of-sentence [chars]` - end of sentence chars, default chars are ".\n?!". Optional parameter.
-* `-d [chars]` or `--word-delimiter [chars]` - words delimiter chars, default chars are "\n,.-!?:;/\"#$%&'()\*+<=>@[]\\^\_\`{|}~\t\v\f\r ". Note, end of sentence chars must be included in words delimiters. Optional parameter.
+* `-d [chars]` or `--word-delimiter [chars]` - words delimiter chars, default chars are " \n,.-!?:;/\"#$%&'()\*+<=>@[]\\^\_\`{|}~\t\v\f\r". Note, end of sentence chars must be included in word delimiters. Optional parameter.
 * `-v` or `--verbose` - show training process details, default is false. Optional parameter.
+
+For example, train the model from corpus.txt file and save it to model.w2v. Use Skip-Gram & Negative Sampling, vector size 500, downsampling threshold 1e-5, 3 iterations, all other parameters by default:
+`./w2v_trainer -f ./corpus.txt -o ./model.w2v -g -n 10 -s 500 -l 1e-5 -i 3`
 
 ### Basic usage
 
