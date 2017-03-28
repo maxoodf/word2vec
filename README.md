@@ -43,22 +43,30 @@ The following training parameters are available.
 * `-i [value]` or `--iter [value]` - number of training iterations, default value is 5. More iterations makes a more precise model, but computational cost is linearly proportional to iterations. Optional parameter.
 * `-t [value]` or `--threads [value]` -  number of training threads, default value is 12. Optional parameter.
 * `-m [value]` or `--min-word-freq [value]` - exclude words that appear less than [value] times from vocabulary, default value is 5. Optional parameter.
-* `-e [chars]` or `--end-of-sentence [chars]` - end of sentence chars, default chars are ".\n?!". Optional parameter.
-* `-d [chars]` or `--word-delimiter [chars]` - words delimiter chars, default chars are " \n,.-!?:;/\"#$%&'()\*+<=>@[]\\^\_\`{|}~\t\v\f\r". Note, end of sentence chars must be included in word delimiters. Optional parameter.
+* `-e [chars]` or `--end-of-sentence [chars]` - end of sentence (EOS) chars, default chars are ".\n?!". Original C code EOS chars are "\n". Optional parameter.
+* `-d [chars]` or `--word-delimiter [chars]` - words delimiter (WD) chars, default chars are " \n,.-!?:;/\"#$%&'()\*+<=>@[]\\^\_\`{|}~\t\v\f\r". Note, end of sentence chars must be included in word delimiters. Original C code WD chars are " \t\n". Optional parameter.
 * `-v` or `--verbose` - show training process details, default is false. Optional parameter.
 
-For example, train the model from corpus.txt file and save it to model.w2v. Use Skip-Gram & Negative Sampling, vector size 500, downsampling threshold 1e-5, 3 iterations, all other parameters by default:  
+For example, train the model from corpus.txt file and save it to model.w2v. Use Skip-Gram, Negative Sampling with 10 examples, vector size 500, downsampling threshold 1e-5, 3 iterations, all other parameters by default:  
 `./w2v_trainer -f ./corpus.txt -o ./model.w2v -g -n 10 -s 500 -l 1e-5 -i 3`
 
 ### Basic usage
+- #### Distance
+- #### Analogy
+- #### Accuracy
+- #### Examples
+  - ###### king - man + woman = queen
+  - ###### Nearest documents
 
 ### Implementation improvements vs original C code
 - #### Negative sampling
+[Mikolov et al 2.2](https://arxiv.org/pdf/1310.4546.pdf) introduced a simplified Noise Contrastive Estimation called Negative sampling. The key feature of the Negative Sampling implementation is an array referred as the Unigram table. This is the lookup table of negative samples randomly selected during the training process. I found that the same probability distribution could be implemented with [std::piecewise_linear_distribution](http://www.cplusplus.com/reference/random/piecewise_linear_distribution/) and outperforms the original implementation in more than 2 times.
+![Subsampling probability (keeping the word)](https://www.dropbox.com/s/qps9rjbsq6zv32k/g2.png?raw=1)
 
 - #### Hierarchical Softmax
 
 - #### Subsampling (down-sampling)
-[Mikolov et al](https://arxiv.org/pdf/1310.4546.pdf) used a simple subsampling approach: each word ![wi](https://www.dropbox.com/s/is6askf96sj3lhs/f9.png?raw=1) in the training set is ***discarded*** with probability computed by the formula  ![P(w)](https://www.dropbox.com/s/ms8g7zz8ink2krm/f1.png?raw=1) where ![f(wi)](https://www.dropbox.com/s/mjnohff0ewdyb78/f8.png?raw=1) is the frequency of word ![wi](https://www.dropbox.com/s/is6askf96sj3lhs/f9.png?raw=1) and ![t](https://www.dropbox.com/s/2pkwgism8101n3a/f10.png?raw=1) is a chosen threshold, typically around ![10e−5](https://www.dropbox.com/s/ugsghly2s3k4t9s/f11.png?raw=1).
+[Mikolov et al 2.3](https://arxiv.org/pdf/1310.4546.pdf) used a simple subsampling approach: each word ![wi](https://www.dropbox.com/s/is6askf96sj3lhs/f9.png?raw=1) in the training set is ***discarded*** with probability computed by the formula  ![P(w)](https://www.dropbox.com/s/ms8g7zz8ink2krm/f1.png?raw=1) where ![f(wi)](https://www.dropbox.com/s/mjnohff0ewdyb78/f8.png?raw=1) is the frequency of word ![wi](https://www.dropbox.com/s/is6askf96sj3lhs/f9.png?raw=1) and ![t](https://www.dropbox.com/s/2pkwgism8101n3a/f10.png?raw=1) is a chosen threshold, typically around ![10e−5](https://www.dropbox.com/s/ugsghly2s3k4t9s/f11.png?raw=1).
 But [the original C code](https://github.com/svn2github/word2vec) implements another equation, the probability of ***keeping*** the word: ![P(w)](https://www.dropbox.com/s/z1umpdl9h6qe559/f2.png?raw=1) where ![r(wi)](https://www.dropbox.com/s/sm6ag6nx6wq44oc/f3.png?raw=1) and ![T](https://www.dropbox.com/s/8jg6t3rvtjvqbis/f12.png?raw=1) is the total words in the corpus, so: ![P(w)](https://www.dropbox.com/s/sshui81t3q6xi28/f4.png?raw=1)  
 **Probability of word keeping distribution:**
 ![Subsampling probability (keeping the word)](https://www.dropbox.com/s/fgjduwpjkvzi3a3/g1.png?raw=1)
