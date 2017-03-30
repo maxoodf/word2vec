@@ -47,32 +47,9 @@ namespace w2v {
     */
     class vector_t: public std::vector<float> {
     public:
-        /// Constructs an empty vector with size _size
         vector_t(): std::vector<float>() {}
+        /// Constructs an empty vector with size _size
         vector_t(std::size_t _size): std::vector<float>(_size, 0.0f) {}
-//        /// Constructs a copy of vector _vec
-//        w2vBase_t(const w2vModel_t::vector_t &_vec): m_vec(_vec) {}
-//        /// Copy constructor
-//        vector_t(const vector_t &_from): m_vec(_from.m_vec) {}
-
-//        /// vector access operator
-//        vector_t &operator()() noexcept {return m_vec;}
-
-//        /// @returns a copy of _from object
-//        vector_t &operator=(const vector_t &_from) {
-//            assert(size() == _from.size());
-//
-//            if (this != &_from) {
-//                std::copy(_from.begin(), _from.end(), begin());
-//            }
-//            return *this;
-//        }
-
-//        float operator[](std::size_t _idx) const noexcept {return m_vec[_idx];}
-
-//        std::size_t size() const noexcept {
-//            return m_vec.size();
-//        }
 
         /// @returns a copy of _from object
         vector_t &operator=(const vector_t &_from) {
@@ -186,7 +163,7 @@ namespace w2v {
 
         /**
          * Vector access by key value
-         * @param _key key value uniquily identifying vector in model
+         * @param _key key value uniquely identifying vector in model
          * @returns pointer to the vector or nullptr if no such key found
         */
         inline const vector_t *vector(const key_t &_key) const noexcept {
@@ -244,7 +221,6 @@ namespace w2v {
                         nearestVecs.pop();
                         entryLevel = nearestVecs.top().second;
                     }
-//                    entryLevel = nearestVecs.top().second;
                 }
             }
 
@@ -314,12 +290,9 @@ namespace w2v {
      * Model is derived from model_t class and implements save/load methods
     */
     class d2vModel_t: public model_t<std::size_t> {
-    private:
-        const w2vModel_t *m_w2vModel;
-
     public:
-        d2vModel_t(const w2vModel_t *_w2vModel): model_t<std::size_t>(), m_w2vModel(_w2vModel) {
-            m_vectorSize = m_w2vModel->vectorSize();
+        d2vModel_t(const std::unique_ptr<w2vModel_t> &_w2vModel): model_t<std::size_t>() {
+            m_vectorSize = _w2vModel->vectorSize();
         }
 
         /// add/replace new _vector with unique _id to the model
@@ -344,28 +317,17 @@ namespace w2v {
          * @param _model w2vModel_t type object of a pretrained model
          */
 
-        word2vec_t(const w2vModel_t *_model): vector_t(_model->vectorSize()) {}
+        word2vec_t(const std::unique_ptr<w2vModel_t> &_model): vector_t(_model->vectorSize()) {}
         /** Constructs a word2vec object
          * @param _model w2vModel_t type object of a pretrained model
          * @param _word word to be converted to a vector
          */
-        word2vec_t(const w2vModel_t *_model, const std::string &_word): vector_t(_model->vectorSize()) {
+        word2vec_t(const std::unique_ptr<w2vModel_t> &_model, const std::string &_word): vector_t(_model->vectorSize()) {
             auto i = _model->vector(_word);
             if (i != nullptr) {
                 std::copy(i->begin(), i->end(), begin());
             }
         }
-/*
-        /// @returns a copy of _from object
-        word2vec_t &operator=(word2vec_t &_from) {
-            assert(size() == _from.size());
-
-            if (this != &_from) {
-                std::copy(_from.begin(), _from.end(), begin());
-            }
-            return *this;
-        }
-*/
     };
 
     /**
@@ -379,7 +341,7 @@ namespace w2v {
          * @param _model w2vModel_t type object of a pretrained model
          * @param _doc text document to be converted to a vector
          */
-        doc2vec_t(const w2vModel_t *_model,
+        doc2vec_t(const std::unique_ptr<w2vModel_t> &_model,
                   const std::string &_doc,
                   const std::string &_wordDelimiterChars = " \n,.-!?:;/\"#$%&'()*+<=>@[]\\^_`{|}~\t\v\f\r");
     };

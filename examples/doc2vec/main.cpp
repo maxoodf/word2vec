@@ -50,7 +50,7 @@ int main(int argc, char * const *argv) {
     }
 
     // create doc2vec model
-    w2v::d2vModel_t d2vModel(w2vModel.get());
+    w2v::d2vModel_t d2vModel(w2vModel);
     try {
         std::string fileText;
         {
@@ -60,7 +60,7 @@ int main(int argc, char * const *argv) {
             */
             readFile(std::string(argv[2]) + "/bbc_brazil_meat.txt", fileText);
             //  text to vector
-            w2v::doc2vec_t doc2vec(w2vModel.get(), fileText);
+            w2v::doc2vec_t doc2vec(w2vModel, fileText);
             // add vector with ID = 1 to the model
             d2vModel.set(1, doc2vec);
         }
@@ -71,7 +71,7 @@ int main(int argc, char * const *argv) {
             */
             readFile(std::string(argv[2]) + "/bbc_india_cannabis.txt", fileText);
             //  text to vector
-            w2v::doc2vec_t doc2vec(w2vModel.get(), fileText);
+            w2v::doc2vec_t doc2vec(w2vModel, fileText);
             // add vector with ID = 2 to the model
             d2vModel.set(2, doc2vec);
         }
@@ -81,7 +81,7 @@ int main(int argc, char * const *argv) {
             */
             readFile(std::string(argv[2]) + "/bbc_orly_shooting.txt", fileText);
             //  text to vector
-            w2v::doc2vec_t doc2vec(w2vModel.get(), fileText);
+            w2v::doc2vec_t doc2vec(w2vModel, fileText);
             // add vector with ID = 3 to the model
             d2vModel.set(3, doc2vec);
         }
@@ -91,7 +91,7 @@ int main(int argc, char * const *argv) {
             */
             readFile(std::string(argv[2]) + "/cnbc_orly_shooting.txt", fileText);
             //  text to vector
-            w2v::doc2vec_t doc2vec(w2vModel.get(), fileText);
+            w2v::doc2vec_t doc2vec(w2vModel, fileText);
             // add vector with ID = 4 to the model
             d2vModel.set(4, doc2vec);
         }
@@ -101,7 +101,7 @@ int main(int argc, char * const *argv) {
             */
             readFile(std::string(argv[2]) + "/cnn_formula1.txt", fileText);
             //  text to vector
-            w2v::doc2vec_t doc2vec(w2vModel.get(), fileText);
+            w2v::doc2vec_t doc2vec(w2vModel, fileText);
             // add vector with ID = 5 to the model
             d2vModel.set(5, doc2vec);
         }
@@ -111,7 +111,7 @@ int main(int argc, char * const *argv) {
             */
             readFile(std::string(argv[2]) + "/cnn_orly_shooting.txt", fileText);
             //  text to vector
-            w2v::doc2vec_t doc2vec(w2vModel.get(), fileText);
+            w2v::doc2vec_t doc2vec(w2vModel, fileText);
             // add vector with ID = 6 to the model
             d2vModel.set(6, doc2vec);
         }
@@ -121,7 +121,7 @@ int main(int argc, char * const *argv) {
             */
             readFile(std::string(argv[2]) + "/nyt_orly_bombing.txt", fileText);
             //  text to vector
-            w2v::doc2vec_t doc2vec(w2vModel.get(), fileText);
+            w2v::doc2vec_t doc2vec(w2vModel, fileText);
             // add vector with ID = 7 to the model
             d2vModel.set(7, doc2vec);
         }
@@ -131,7 +131,7 @@ int main(int argc, char * const *argv) {
         */
         readFile(std::string(argv[2]) + "/independent_orly_shooting.txt", fileText);
         //  text to vector
-        w2v::doc2vec_t doc2vec(w2vModel.get(), fileText);
+        w2v::doc2vec_t doc2vec(w2vModel, fileText);
 
         // get nearest article IDs from the model
         std::vector<std::pair<std::size_t, float>> nearest;

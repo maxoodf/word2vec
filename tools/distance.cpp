@@ -15,6 +15,8 @@
 
 int main(int argc, char * const *argv) {
     if (argc != 2) {
+        std::cerr << "Usage:" << std::endl
+                  << argv[0] << " [word2vec_model_file_name]" << std::endl;
         return 1;
     }
 
@@ -42,8 +44,7 @@ int main(int argc, char * const *argv) {
             std::cout << std::right << std::setw(19) << "Word" << std::left << std::setw(9) << " Distance" << std::endl;
             std::cout << std::right << std::setw(28) << std::setfill('-') << "-" << std::setfill(' ') << std::endl;
 
-//            w2v::word2vec_t vec(&model, query);
-            w2v::doc2vec_t vec(model.get(), query);
+            w2v::doc2vec_t vec(model, query);
             std::vector<std::pair<std::string, float>> nearests;
             model->nearest(vec, nearests, 30);
             for (auto const &i:nearests) {

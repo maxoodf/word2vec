@@ -209,7 +209,7 @@ namespace w2v {
         return true;
     }
 
-    doc2vec_t::doc2vec_t(const w2vModel_t *_model,
+    doc2vec_t::doc2vec_t(const std::unique_ptr<w2vModel_t> &_model,
                          const std::string &_doc,
                          const std::string &_wordDelimiterChars): vector_t(_model->vectorSize()) {
         stringMapper_t stringMapper(_doc);

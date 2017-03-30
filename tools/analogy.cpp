@@ -15,6 +15,8 @@
 
 int main(int argc, char * const *argv) {
     if (argc != 2) {
+        std::cerr << "Usage:" << std::endl
+                  << argv[0] << " [word2vec_model_file_name]" << std::endl;
         return 1;
     }
 
@@ -33,26 +35,28 @@ int main(int argc, char * const *argv) {
     while (true) {
         try {
             std::cout << "Enter 3 words (EXIT to break): ";
-            std::string word;
-            std::cin >> word;
-            if (word == "EXIT") {
+            std::string word1, word2, word3;
+            std::cin >> word1;
+            if (word1 == "EXIT") {
                 break;
             }
-            w2v::word2vec_t vec1(model.get(), word);
-            std::cin >> word;
-            w2v::word2vec_t vec2(model.get(), word);
-            std::cin >> word;
-            w2v::word2vec_t vec3(model.get(), word);
+            std::cin >> word2;
+            std::cin >> word3;
 
-            vec2 -= vec1;
-            vec2 += vec3;
+            w2v::word2vec_t vec1(model, word1);
+            w2v::word2vec_t vec2(model, word2);
+            w2v::word2vec_t vec3(model, word3);
+            w2v::vector_t vec = vec2 - vec1 + vec3;
 
             std::cout << std::right << std::setw(19) << "Word" << std::left << std::setw(9) << " Distance" << std::endl;
             std::cout << std::right << std::setw(28) << std::setfill('-') << "-" << std::setfill(' ') << std::endl;
 
             std::vector<std::pair<std::string, float>> nearests;
-            model->nearest(vec2, nearests, 30);
+            model->nearest(vec, nearests, 30);
             for (auto const &i:nearests) {
+                if ((i.first == word1) || (i.first == word2) || (i.first == word3)) {
+                    continue;
+                }
                 std::cout << std::right << std::setw(19) << i.first << " " << std::left << std::setw(9) << i.second << std::endl;
             }
             std::cout << std::endl;

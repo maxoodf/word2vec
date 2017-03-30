@@ -17,6 +17,8 @@
 
 int main(int argc, char * const *argv) {
     if (argc != 3) {
+        std::cerr << "Usage:" << std::endl
+                  << argv[0] << " [word2vec_model_file_name] [analogies_test_set_file_name]" << std::endl;
         return 1;
     }
 
@@ -26,6 +28,7 @@ int main(int argc, char * const *argv) {
         model.reset(new w2v::w2vModel_t());
         model->load(argv[1]);
 
+        ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         ifs.open(argv[2]);
     } catch (const std::exception &_e) {
         std::cerr << _e.what() << std::endl;
@@ -62,9 +65,9 @@ int main(int argc, char * const *argv) {
         std::transform(word3.begin(), word3.end(), word3.begin(), tolower);
         std::transform(word4.begin(), word4.end(), word4.begin(), tolower);
         try {
-            w2v::word2vec_t vec(model.get(), word2);
-            vec -= w2v::word2vec_t(model.get(), word1);
-            vec += w2v::word2vec_t(model.get(), word3);
+            w2v::word2vec_t vec(model, word2);
+            vec -= w2v::word2vec_t(model, word1);
+            vec += w2v::word2vec_t(model, word3);
 
             std::vector<std::pair<std::string, float>> nearests;
             model->nearest(vec, nearests, model->modelSize());
@@ -85,9 +88,6 @@ int main(int argc, char * const *argv) {
         sectionAccuracy += accuracy * accuracy;
         testSets++;
         sectionSets++;
-//        if (accuracy == 0.0f) {
-//            std::cout << "Failed on:  " << word2 << " - " << word1 << " + " << word3 << " = " << word4 << std::endl;
-//        }
     }
     ifs.close();
 

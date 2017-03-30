@@ -32,9 +32,9 @@ int main(int argc, char * const *argv) {
     }
 
     try {
-        w2v::word2vec_t king(w2vModel.get(), "king"); // vector of the word "king"
-        w2v::word2vec_t man(w2vModel.get(), "man"); // vector of the word "man"
-        w2v::word2vec_t woman(w2vModel.get(), "woman"); // vector of the word "woman"
+        w2v::word2vec_t king(w2vModel, "king"); // vector of the word "king"
+        w2v::word2vec_t man(w2vModel, "man"); // vector of the word "man"
+        w2v::word2vec_t woman(w2vModel, "woman"); // vector of the word "woman"
 
         w2v::vector_t result = king - man + woman; // result vector
 
