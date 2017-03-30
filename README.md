@@ -51,19 +51,37 @@ For example, train the model from corpus.txt file and save it to model.w2v. Use 
 `./w2v_trainer -f ./corpus.txt -o ./model.w2v -g -n 10 -s 500 -l 1e-5 -i 3`
 
 ### Basic usage
-- #### Distance
-- #### Analogy
-- #### Accuracy
-- #### Examples
-  - ###### king - man + woman = queen
-  - ###### Nearest documents
+You can download one or more models (833MB each) trained on [11.8GB English texts corpus](https://drive.google.com/file/d/0B1shHLc2QTzzRkxULXBIb0J3VTA/view?usp=sharing):
+- [CBOW, Hierarchical Softmax, vector size 500, window 10](https://drive.google.com/file/d/0B1shHLc2QTzzV1dhaVk1MUt2cmc/view?usp=sharing)
+- [CBOW, Negative Sampling, vector size 500, window 10](https://drive.google.com/file/d/0B1shHLc2QTzzTVZESDFpQk5jNG8/view?usp=sharing)
+- [Skip-Gram, Hierarchical Softmax, vector size 500, window 10](https://drive.google.com/file/d/0B1shHLc2QTzzZl9vSS1FOFh1N0k/view?usp=sharing)
+- [Skip-Gram, Negative Sampling, vector size 500, window 10](https://drive.google.com/file/d/0B1shHLc2QTzzWFhpX2kwbWRkaWs/view?usp=sharing)
 
-### Implementation improvements vs original C code
+- #### Distance
+`w2v_distance` utility from the project's `bin` directory. Usage: `w2v_distance [model_file_name]`.
+This utility displays nearest words and vector distances to an entered word or a phrase.
+- #### Analogy
+`w2v_analogy` utility from the project's `bin` directory. Usage: `w2v_analogy [model_file_name]`.
+This utility displays nearest word analogies and vector distances. For example, the nearest expected analogy for "man king woman" is "queen", ie if "man" is "king" what is the analogy for "woman": vector("king") - vector("man") + vector("woman") ~= vector("queen").
+- #### Accuracy
+`w2v_accuracy` utility from the project's `bin` directory. Usage: `w2v_accuracy [model_file_name] [analogies_file_name]`.
+This is the model accuracy test utility. It works like `w2v_analogy` and compares a computed analogy result word with a given expected word.
+`[analogies_file_name]` file format is the following:
+each line of the file contains 4 words - `word1 word2 word3 word4` where `word1` is related to `word2` like "king" is "man" and `word3` is related to `word4` like "queen" is "woman" and both pairs have the same analogy. The utility finds nearest words for the result vector of vector(word2) - vector(word1) + vector(word3) and compares it with the vector(word4) for each line of the `[analogies_file_name]`. The model error is the middle square error of distances from the given `word4` and the computed word position.
+- #### Examples
+  - ###### [king - man + woman = queen](https://github.com/maxoodf/word2vec/blob/master/examples/word2vec/main.cpp)
+  This is the simplest example of word vectors usage.
+
+  - ###### [Nearest documents](https://github.com/maxoodf/word2vec/blob/master/examples/doc2vec/main.cpp)
+  This is the simplest example of document vectors usage.
+
+### Implementation improvements VS original C code
 - #### Negative sampling
-[Mikolov et al 2.2](https://arxiv.org/pdf/1310.4546.pdf) introduced a simplified Noise Contrastive Estimation called Negative sampling. The key feature of the Negative Sampling implementation is an array referred as the Unigram table. This is the lookup table of negative samples randomly selected during the training process. I found that the same probability distribution could be implemented with [std::piecewise_linear_distribution](http://www.cplusplus.com/reference/random/piecewise_linear_distribution/) and outperforms the original implementation in more than 2 times.
+[Mikolov et al 2.2](https://arxiv.org/pdf/1310.4546.pdf) introduced a simplified Noise Contrastive Estimation called Negative sampling. The key feature of the Negative Sampling implementation is an array referred as the Unigram table. This is the lookup table of negative samples randomly selected during the training process. I found that the same probability distribution could be implemented with [std::piecewise_linear_distribution](http://www.cplusplus.com/reference/random/piecewise_linear_distribution/) and it outperforms the original implementation in more than 2 times.
 ![Subsampling probability (keeping the word)](https://www.dropbox.com/s/qps9rjbsq6zv32k/g2.png?raw=1)
 
 - #### Hierarchical Softmax
+tobecontinued
 
 - #### Subsampling (down-sampling)
 [Mikolov et al 2.3](https://arxiv.org/pdf/1310.4546.pdf) used a simple subsampling approach: each word ![wi](https://www.dropbox.com/s/is6askf96sj3lhs/f9.png?raw=1) in the training set is ***discarded*** with probability computed by the formula  ![P(w)](https://www.dropbox.com/s/ms8g7zz8ink2krm/f1.png?raw=1) where ![f(wi)](https://www.dropbox.com/s/mjnohff0ewdyb78/f8.png?raw=1) is the frequency of word ![wi](https://www.dropbox.com/s/is6askf96sj3lhs/f9.png?raw=1) and ![t](https://www.dropbox.com/s/2pkwgism8101n3a/f10.png?raw=1) is a chosen threshold, typically around ![10e−5](https://www.dropbox.com/s/ugsghly2s3k4t9s/f11.png?raw=1).
@@ -73,7 +91,9 @@ But [the original C code](https://github.com/svn2github/word2vec) implements ano
 We can see that probability of infrequent words keeping equals to 1 and it is not needed to compute probability for these words. We can find boundaries where do we need to compute a probability by solving the inequality: ![P(wi)>=1](https://www.dropbox.com/s/ghegeqzuo1ls7pq/f6.png?raw=1) than,
 **probability computation is needed only for the following word frequencies:** ![f(wi)](https://www.dropbox.com/s/b5slcxb4fihh509/f7.png?raw=1)
 - #### Vocabulary
-
+tobecontinued
 - #### File operations
-
+tobecontinued
 ### Performance
+The overall training performance, comparing to the original C code, is increased about 12% in average, depending on train settings.
+tobecontinued
