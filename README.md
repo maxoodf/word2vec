@@ -78,22 +78,21 @@ each line of the file contains 4 words - `word1 word2 word3 word4` where `word1`
 ### Implementation improvements VS original C code
 - #### Negative sampling
 [Mikolov et al 2.2](https://arxiv.org/pdf/1310.4546.pdf) introduced a simplified Noise Contrastive Estimation called Negative sampling. The key feature of the Negative Sampling implementation is an array referred as the Unigram table. This is the lookup table of negative samples randomly selected during the training process. I found that the same probability distribution could be implemented with [std::piecewise_linear_distribution](http://www.cplusplus.com/reference/random/piecewise_linear_distribution/) and it outperforms the original implementation in more than 2 times.
-![Subsampling probability (keeping the word)](https://www.dropbox.com/s/qps9rjbsq6zv32k/g2.png?raw=1)
-
-- #### Hierarchical Softmax
-tobecontinued
+<img src="https://www.dropbox.com/s/qps9rjbsq6zv32k/g2.png?raw=1" width="759">
 
 - #### Subsampling (down-sampling)
-[Mikolov et al 2.3](https://arxiv.org/pdf/1310.4546.pdf) used a simple subsampling approach: each word ![wi](https://www.dropbox.com/s/is6askf96sj3lhs/f9.png?raw=1) in the training set is ***discarded*** with probability computed by the formula  ![P(w)](https://www.dropbox.com/s/ms8g7zz8ink2krm/f1.png?raw=1) where ![f(wi)](https://www.dropbox.com/s/mjnohff0ewdyb78/f8.png?raw=1) is the frequency of word ![wi](https://www.dropbox.com/s/is6askf96sj3lhs/f9.png?raw=1) and ![t](https://www.dropbox.com/s/2pkwgism8101n3a/f10.png?raw=1) is a chosen threshold, typically around ![10e−5](https://www.dropbox.com/s/ugsghly2s3k4t9s/f11.png?raw=1).
+[Mikolov et al 2.3](https://arxiv.org/pdf/1310.4546.pdf) used a simple subsampling approach: each word ![wi](https://www.dropbox.com/s/is6askf96sj3lhs/f9.png?raw=1
+  ) in the training set is ***discarded*** with probability computed by the formula  ![P(w)](https://www.dropbox.com/s/ms8g7zz8ink2krm/f1.png?raw=1) where ![f(wi)](https://www.dropbox.com/s/mjnohff0ewdyb78/f8.png?raw=1) is the frequency of word ![wi](https://www.dropbox.com/s/is6askf96sj3lhs/f9.png?raw=1) and ![t](https://www.dropbox.com/s/2pkwgism8101n3a/f10.png?raw=1) is a chosen threshold, typically around ![10e−5](https://www.dropbox.com/s/ugsghly2s3k4t9s/f11.png?raw=1).
 But [the original C code](https://github.com/svn2github/word2vec) implements another equation, the probability of ***keeping*** the word: ![P(w)](https://www.dropbox.com/s/z1umpdl9h6qe559/f2.png?raw=1) where ![r(wi)](https://www.dropbox.com/s/sm6ag6nx6wq44oc/f3.png?raw=1) and ![T](https://www.dropbox.com/s/8jg6t3rvtjvqbis/f12.png?raw=1) is the total words in the corpus, so: ![P(w)](https://www.dropbox.com/s/sshui81t3q6xi28/f4.png?raw=1)  
 **Probability of word keeping distribution:**
-![Subsampling probability (keeping the word)](https://www.dropbox.com/s/fgjduwpjkvzi3a3/g1.png?raw=1)
+<img src="https://www.dropbox.com/s/fgjduwpjkvzi3a3/g1.png?raw=1" width="659">  
 We can see that probability of infrequent words keeping equals to 1 and it is not needed to compute probability for these words. We can find boundaries where do we need to compute a probability by solving the inequality: ![P(wi)>=1](https://www.dropbox.com/s/ghegeqzuo1ls7pq/f6.png?raw=1) than,
 **probability computation is needed only for the following word frequencies:** ![f(wi)](https://www.dropbox.com/s/b5slcxb4fihh509/f7.png?raw=1)
-- #### Vocabulary
-tobecontinued
 - #### File operations
-tobecontinued
+All file I/O operations in word2vec++ are mapped into memory. It's well known that sequential reading/writing is extremely fast on mapped files. For example, 900MB model file loading takes only 0.82 sec while the same operation takes 6.76 sec with the original code.  
+<img src="https://www.dropbox.com/s/avsn72obtv1j4oc/c1.png?raw=1" width="400">
+<img src="https://www.dropbox.com/s/e5qrh4gyryrwlhq/c2.png?raw=1" width="400">  
 ### Performance
-The overall training performance, comparing to the original C code, is increased about 12% in average, depending on train settings.
-tobecontinued
+The overall training performance, comparing to the original C code, is increased about 17% in average, depending on train settings.  
+All tests are done with perf utility on Ubuntu 16.04 (linux 4.4.0), GCC 5.4.1, compiler optimization flags: -Ofast -march=native -funroll-loops -ftree-vectorize", [11.8GB English texts corpus](https://drive.google.com/file/d/0B1shHLc2QTzzRkxULXBIb0J3VTA/view?usp=sharing).  
+<img src="https://www.dropbox.com/s/3aa7oyk5e3tufht/c3.png?raw=1" width="610">
