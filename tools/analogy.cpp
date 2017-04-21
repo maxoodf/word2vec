@@ -23,7 +23,9 @@ int main(int argc, char * const *argv) {
     std::unique_ptr<w2v::w2vModel_t> model;
     try {
         model.reset(new w2v::w2vModel_t());
-        model->load(argv[1]);
+        if (!model->load(argv[1])) {
+            throw std::runtime_error(model->errMsg());
+        }
     } catch (const std::exception &_e) {
         std::cerr << _e.what() << std::endl;
         return 2;

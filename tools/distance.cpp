@@ -20,10 +20,14 @@ int main(int argc, char * const *argv) {
         return 1;
     }
 
+    // create w2v model object
     std::unique_ptr<w2v::w2vModel_t> model;
     try {
-         model.reset(new w2v::w2vModel_t());
-        model->load(argv[1]);
+        model.reset(new w2v::w2vModel_t());
+        // load w2v model file
+        if (!model->load(argv[1])) {
+            throw std::runtime_error(model->errMsg());
+        }
     } catch (const std::exception &_e) {
         std::cerr << _e.what() << std::endl;
         return 2;
@@ -48,7 +52,9 @@ int main(int argc, char * const *argv) {
             std::vector<std::pair<std::string, float>> nearests;
             model->nearest(vec, nearests, 30);
             for (auto const &i:nearests) {
-                std::cout << std::right << std::setw(19) << i.first << " " << std::left << std::setw(9) << i.second << std::endl;
+                std::cout << std::right << std::setw(19) << i.first << " "
+                          << std::left << std::setw(9) << i.second
+                          << std::endl;
             }
             std::cout << std::endl;
         } catch (const std::exception &_e) {

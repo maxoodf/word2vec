@@ -26,7 +26,9 @@ int main(int argc, char * const *argv) {
     std::ifstream ifs;
     try {
         model.reset(new w2v::w2vModel_t());
-        model->load(argv[1]);
+        if (!model->load(argv[1])) {
+            throw std::runtime_error(model->errMsg());
+        }
 
         ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         ifs.open(argv[2]);

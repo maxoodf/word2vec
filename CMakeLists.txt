@@ -10,6 +10,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Werror")
+# add -fsanitize=address -fno-omit-frame-pointer options to anable AddressSanitizer
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -march=native -funroll-loops -ftree-vectorize -DNDEBUG")
 

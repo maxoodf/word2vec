@@ -22,7 +22,9 @@ int main(int argc, char * const *argv) {
     std::unique_ptr<w2v::w2vModel_t> w2vModel;
     try {
         w2vModel.reset(new w2v::w2vModel_t());
-        w2vModel->load(argv[1]);
+        if (!w2vModel->load(argv[1])) {
+            throw std::runtime_error(w2vModel->errMsg());
+        }
     } catch (const std::exception &_e) {
         std::cerr << _e.what() << std::endl;
         return 2;
