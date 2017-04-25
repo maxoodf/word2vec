@@ -164,7 +164,7 @@ namespace w2v {
                 }
 
                 // skip last ' ' char and check boundaries
-                if (static_cast<off_t>(++offset + m_vectorSize * sizeof(float) + sizeof(char)) >= input.size()) {
+                if (static_cast<off_t>(++offset + m_vectorSize * sizeof(float) + sizeof(char)) > input.size()) {
                     throw std::runtime_error(wrongFormatErrMsg);
                 }
 
@@ -196,17 +196,81 @@ namespace w2v {
     }
 
     bool d2vModel_t::save(const std::string &_modelFile) const noexcept {
-        // write data to the file
-        fileMapper_t output(_modelFile, true, 111);
+        try {
+            auto msSize = sizeof(m_mapSize);
+            auto vsSize = sizeof(m_vectorSize);
+            off_t fileSize = msSize + vsSize  // header size
+                                   + (sizeof(std::size_t)
+                                      + m_vectorSize * sizeof(float)) * m_mapSize; // record size
+            // write data to the file
+            fileMapper_t output(_modelFile, true, fileSize);
+            off_t offset = 0;
+            std::memcpy(output.data() + offset, &m_mapSize, msSize);
+            offset += msSize;
+            std::memcpy(output.data() + offset, &m_vectorSize, vsSize);
+            offset += vsSize;
+            auto idSize = sizeof(std::size_t);
+            auto elmSize = sizeof(float);
+            for (const auto &i:m_map) {
+                std::memcpy(output.data() + offset, &(i.first), idSize);
+                offset += idSize;
+                for (const auto &j:i.second) {
+                    std::memcpy(output.data() + offset, &j, elmSize);
+                    offset += elmSize;
+                }
+            }
 
-        return true;
+            return true;
+        } catch (const std::exception &_e) {
+            m_errMsg = _e.what();
+        } catch (...) {
+            m_errMsg = "model: unknown error";
+        }
+
+        return false;
     }
 
     bool d2vModel_t::load(const std::string &_modelFile) noexcept {
-        // map model file
-        fileMapper_t input(_modelFile);
+        try {
+            m_map.clear();
+            // map model file
+            fileMapper_t input(_modelFile);
 
-        return true;
+            auto msSize = sizeof(m_mapSize);
+            auto vsSize = sizeof(m_vectorSize);
+            if (static_cast<off_t>(msSize + vsSize) > input.size()) {
+                throw std::runtime_error(wrongFormatErrMsg);
+            }
+            off_t offset = 0;
+            std::memcpy(&m_mapSize, input.data() + offset, msSize);
+            offset += msSize;
+            std::memcpy(&m_vectorSize, input.data() + offset, vsSize);
+            offset += vsSize;
+
+            auto idSize = sizeof(std::size_t);
+            auto elmSize = sizeof(float);
+            if (static_cast<off_t>(msSize + vsSize + (idSize + elmSize * m_vectorSize) * m_mapSize) != input.size()) {
+                throw std::runtime_error(wrongFormatErrMsg);
+            }
+
+            for (std::size_t i = 0; i < m_mapSize; ++i) {
+                std::size_t id = 0;
+                std::memcpy(&id, input.data() + offset, idSize);
+                offset += idSize;
+                auto &v = m_map[id];
+                v.resize(m_vectorSize);
+                std::memcpy(v.data(), input.data() + offset, m_vectorSize * sizeof(float));
+                offset += m_vectorSize * sizeof(float);
+            }
+
+            return true;
+        } catch (const std::exception &_e) {
+            m_errMsg = _e.what();
+        } catch (...) {
+            m_errMsg = "model: unknown error";
+        }
+
+        return false;
     }
 
     doc2vec_t::doc2vec_t(const std::unique_ptr<w2vModel_t> &_model,

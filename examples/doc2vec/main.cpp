@@ -158,6 +158,10 @@ int main(int argc, char * const *argv) {
  * Article 7 is not so close, it's also about Orly accident, but it was another accident.
  * From the other hand article 5 (Formula 1) is quite far away and it's true.
 */
+        // finaly, save our doc2vec model
+        if (!d2vModel.save("model.d2v")) {
+            std::cerr << "Can not save model: " << d2vModel.errMsg() << std::endl;
+        }
     } catch (const std::exception &_e) {
         std::cerr << _e.what() << std::endl;
         return 3;
