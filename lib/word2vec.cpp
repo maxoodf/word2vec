@@ -121,6 +121,8 @@ namespace w2v {
 
     bool w2vModel_t::load(const std::string &_modelFile) noexcept {
         try {
+            m_map.clear();
+
             // map model file, exception will be thrown on empty file
             fileMapper_t input(_modelFile);
 
@@ -233,6 +235,7 @@ namespace w2v {
     bool d2vModel_t::load(const std::string &_modelFile) noexcept {
         try {
             m_map.clear();
+
             // map model file
             fileMapper_t input(_modelFile);
 

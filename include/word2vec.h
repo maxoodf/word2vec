@@ -291,13 +291,18 @@ namespace w2v {
     */
     class d2vModel_t: public model_t<std::size_t> {
     public:
-        d2vModel_t(const std::unique_ptr<w2vModel_t> &_w2vModel): model_t<std::size_t>() {
-            m_vectorSize = _w2vModel->vectorSize();
+        d2vModel_t(uint16_t _vectorSize): model_t<std::size_t>() {
+            m_vectorSize = _vectorSize;
         }
 
         /// add/replace new _vector with unique _id to the model
         void set(std::size_t _id, const vector_t &_vector) {
             m_map[_id] = _vector;
+            m_mapSize = m_map.size();
+        }
+        /// remove _vector with unique _id from the model
+        void erase(std::size_t _id) {
+            m_map.erase(_id);
             m_mapSize = m_map.size();
         }
         /// saves document vectors to file with _modelFile name

@@ -53,7 +53,7 @@ int main(int argc, char * const *argv) {
     }
 
     // create doc2vec model
-    w2v::d2vModel_t d2vModel(w2vModel);
+    w2v::d2vModel_t d2vModel(w2vModel->vectorSize());
     try {
         std::string fileText;
         {
