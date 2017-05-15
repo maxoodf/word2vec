@@ -34,3 +34,6 @@ set(PRJ_SRCS
 
 add_library(${PROJECT_NAME} STATIC ${PRJ_SRCS})
 target_link_libraries(${PROJECT_NAME} ${LIBS})
+
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)
+install(FILES ${PROJECT_INCLUDE_DIR}/word2vec.h DESTINATION include)

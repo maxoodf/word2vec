@@ -26,3 +26,8 @@ set(ACCURACY_NAME w2v_accuracy)
 set(ACCURACY_SRCS ${PROJECT_SOURCE_DIR}/accuracy.cpp)
 add_executable(${ACCURACY_NAME} ${ACCURACY_SRCS})
 target_link_libraries(${ACCURACY_NAME} word2vec ${LIBS})
+
+install(TARGETS ${TRAINER_NAME} DESTINATION bin)
+install(TARGETS ${DISTANCE_NAME} DESTINATION bin)
+install(TARGETS ${ANALOGY_NAME} DESTINATION bin)
+install(TARGETS ${ACCURACY_NAME} DESTINATION bin)
