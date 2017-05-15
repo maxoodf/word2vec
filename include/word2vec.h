@@ -189,6 +189,9 @@ namespace w2v {
             for (uint16_t i = 0; i < m_vectorSize; ++i) {
                 ret += _what[i] * _with[i];
             }
+            if (ret > 0.0f) {
+                ret =  std::sqrt(ret);
+            }
             return ret;
         }
 
