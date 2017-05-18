@@ -148,8 +148,12 @@ namespace w2v {
                 }
             }
 
-            m_mapSize = static_cast<std::size_t>(std::stoll(nwStr));
-            m_vectorSize = static_cast<uint16_t>(std::stoi(vsStr));
+            try {
+                m_mapSize = static_cast<std::size_t>(std::stoll(nwStr));
+                m_vectorSize = static_cast<uint16_t>(std::stoi(vsStr));
+            } catch (...) {
+                throw std::runtime_error(wrongFormatErrMsg);
+            }
 
             // get pairs of word and vector
             offset++; // skip last '\n' char
@@ -180,6 +184,9 @@ namespace w2v {
                 float med = 0.0f;
                 for (auto const &j:v) {
                     med += j * j;
+                }
+                if (med <= 0.0f) {
+                    throw std::runtime_error("failed to normalize vectors");
                 }
                 med = std::sqrt(med);
                 for (auto &j:v) {
