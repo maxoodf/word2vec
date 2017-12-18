@@ -16,7 +16,8 @@
  * Let's try to find news articles about Orly airport shooting accident.
  * There are 8 text samples in {project}/examples/doc2vec/texts folder.
  * We will load 7 of them to a doc2vec model and will use one article to find nearest articles from the model.
- */void readFile(const std::string &_fileName, std::string &_data) {
+ */
+void readFile(const std::string &_fileName, std::string &_data) {
     std::ifstream ifs;
     ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     ifs.open(_fileName.c_str());

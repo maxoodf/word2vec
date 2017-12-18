@@ -15,7 +15,7 @@
 #endif
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
+#include <cerrno>
 
 #include <stdexcept>
 #include <cstring>
@@ -38,7 +38,7 @@ namespace w2v {
         }
 
         // get file size
-        struct stat fst;
+        struct stat fst{};
         if (fstat(m_fd, &fst) < 0) {
             std::string err = std::string("fileMapper: ") + _fileName + " - " + std::strerror(errno);
             throw std::runtime_error(err);
@@ -58,7 +58,7 @@ namespace w2v {
         }
 
         // map file to memory
-        m_data.rwData = static_cast<char *>(mmap(0, static_cast<size_t>(m_size),
+        m_data.rwData = static_cast<char *>(mmap(nullptr, static_cast<size_t>(m_size),
                                                  m_wrFlag?(PROT_READ | PROT_WRITE):PROT_READ , MAP_SHARED,
                                                  m_fd, 0));
         if (m_data.rwData == static_cast<char *>(MAP_FAILED)) {
@@ -67,7 +67,7 @@ namespace w2v {
         }
     }
 
-    fileMapper_t::~fileMapper_t() noexcept {
+    fileMapper_t::~fileMapper_t() {
         munmap(reinterpret_cast<void *>(m_data.rwData), static_cast<size_t>(m_size));
         close(m_fd);
     }

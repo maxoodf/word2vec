@@ -45,11 +45,12 @@ namespace w2v {
          * @throws std::range_error In case of _offset or/and _stopAt are out of bounds
         */
         wordReader_t(const dataMapper_t &_mapper,
-                     const std::string &_wordDelimiterChars,
-                     const std::string &_endOfSentenceChars,
+                     std::string _wordDelimiterChars,
+                     std::string _endOfSentenceChars,
                      off_t _offset = 0, off_t _stopAt = 0, uint16_t _maxWordLen = 100):
                 m_mapper(_mapper),
-                m_wordDelimiterChars(_wordDelimiterChars), m_endOfSentenceChars(_endOfSentenceChars),
+                m_wordDelimiterChars(std::move(_wordDelimiterChars)),
+                m_endOfSentenceChars(std::move(_endOfSentenceChars)),
                 m_maxWordLen(_maxWordLen), m_offset(_offset),
                 m_startFrom(m_offset), m_stopAt((_stopAt == 0)?_mapper.size() - 1:_stopAt),
                 m_word(m_maxWordLen, 0) {

@@ -30,7 +30,7 @@ namespace w2v {
             huffmanPoint_t huffmanPoint; ///< Huffman tree parent branch IDs
 
             /// Constructs an empty object
-            huffmanData_t(): huffmanCode(), huffmanPoint() {}
+            huffmanData_t() = default;
             /// Constructs an object with _huffmanCode and _huffmanPoint
             huffmanData_t(const huffmanCode_t &_huffmanCode,
                           const huffmanPoint_t &_huffmanPoint):
@@ -44,14 +44,14 @@ namespace w2v {
             const std::size_t m_frequency; ///< frequency value
 
         public:
-            virtual ~node_t() {}
+            virtual ~node_t() = default;
 
             // copying prohibited
             node_t(const node_t &) = delete;
             void operator=(const node_t &) = delete;
 
         protected:
-            node_t(std::size_t _frequency): m_frequency(_frequency) {}
+            explicit node_t(std::size_t _frequency): m_frequency(_frequency) {}
         };
 
         /// Structure to compare tree nodes
@@ -110,7 +110,7 @@ namespace w2v {
          * @param _input Input vector of frequencies to be encoded
          * @throws std::exception in case of a member initialisztion or tree building failed
          */
-        huffmanTree_t(const std::vector<std::size_t> &_input): m_tree(_input.size()) {
+        explicit huffmanTree_t(const std::vector<std::size_t> &_input): m_tree(_input.size()) {
             std::shared_ptr<node_t> tree;
             buildTree(_input, tree);
             generateCodes(tree, huffmanCode_t(), huffmanPoint_t());

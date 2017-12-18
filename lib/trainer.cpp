@@ -12,7 +12,7 @@ namespace w2v {
     trainer_t::trainer_t(const std::shared_ptr<trainSettings_t> &_trainSettings,
                          const std::shared_ptr<vocabulary_t> &_vocabulary,
                          const std::shared_ptr<fileMapper_t> &_fileMapper,
-                         const std::function<void(float, float)> _progressCallback): m_threads() {
+                         std::function<void(float, float)> _progressCallback): m_threads() {
         trainThread_t::sharedData_t sharedData;
 
         if (!_trainSettings) {
@@ -35,8 +35,8 @@ namespace w2v {
         for (uint16_t i = 0; i < _trainSettings->expTableSize; ++i) {
             // Precompute the exp() table
             (*sharedData.expTable)[i] =
-                    static_cast<float>(exp((i / static_cast<float>(_trainSettings->expTableSize) * 2.0f - 1.0f)
-                                           * _trainSettings->expValueMax));
+                    exp((i / static_cast<float>(_trainSettings->expTableSize) * 2.0f - 1.0f)
+                                           * _trainSettings->expValueMax);
             // Precompute f(x) = x / (x + 1)
             (*sharedData.expTable)[i] = (*sharedData.expTable)[i] / ((*sharedData.expTable)[i] + 1.0f);
         }

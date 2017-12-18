@@ -53,23 +53,23 @@ static void usage(const char *_name) {
 }
 
 static struct option longopts[] = {
-        {"train-file",      required_argument,  NULL,   'f' },
-        {"model-file",      required_argument,  NULL,   'o' },
-        {"stop-words-file", required_argument,  NULL,   'x' },
-        {"size",            required_argument,  NULL,   's' },
-        {"window",          required_argument,  NULL,   'w' },
-        {"sample",          required_argument,  NULL,   'l' },
-        {"with-hs",         no_argument,        NULL,   'h' },
-        {"negative",        required_argument,  NULL,   'n' },
-        {"threads",         required_argument,  NULL,   't' },
-        {"iter",            required_argument,  NULL,   'i' },
-        {"min-word-freq",   required_argument,  NULL,   'm' },
-        {"alpha",           required_argument,  NULL,   'a' },
-        {"with-skip-gram",  no_argument,        NULL,   'g' },
-        {"word-delimiters", required_argument,  NULL,   'd' },
-        {"end-of-sentence", required_argument,  NULL,   'e' },
-        {"verbose",         no_argument,        NULL,   'v' },
-        { NULL, 0, NULL, 0 }
+        {"train-file",      required_argument,  nullptr,   'f' },
+        {"model-file",      required_argument,  nullptr,   'o' },
+        {"stop-words-file", required_argument,  nullptr,   'x' },
+        {"size",            required_argument,  nullptr,   's' },
+        {"window",          required_argument,  nullptr,   'w' },
+        {"sample",          required_argument,  nullptr,   'l' },
+        {"with-hs",         no_argument,        nullptr,   'h' },
+        {"negative",        required_argument,  nullptr,   'n' },
+        {"threads",         required_argument,  nullptr,   't' },
+        {"iter",            required_argument,  nullptr,   'i' },
+        {"min-word-freq",   required_argument,  nullptr,   'm' },
+        {"alpha",           required_argument,  nullptr,   'a' },
+        {"with-skip-gram",  no_argument,        nullptr,   'g' },
+        {"word-delimiters", required_argument,  nullptr,   'd' },
+        {"end-of-sentence", required_argument,  nullptr,   'e' },
+        {"verbose",         no_argument,        nullptr,   'v' },
+        { nullptr, 0, nullptr, 0 }
 };
 
 int main(int argc, char * const *argv) {
@@ -80,7 +80,7 @@ int main(int argc, char * const *argv) {
     w2v::trainSettings_t trainSettings;
 
     int ch = 0;
-    while ((ch = getopt_long(argc, argv, "f:o:x:s:w:l:hn:t:i:m:a:gd:e:v?", longopts, NULL)) != -1) {
+    while ((ch = getopt_long(argc, argv, "f:o:x:s:w:l:hn:t:i:m:a:gd:e:v?", longopts, nullptr)) != -1) {
         switch (ch) {
             case 'f':
                 trainFile = optarg;
@@ -166,7 +166,7 @@ int main(int argc, char * const *argv) {
     }
 
     w2v::w2vModel_t model;
-    bool trained = false;
+    bool trained;
     if (verbose) {
         trained = model.train(trainSettings, trainFile, stopWordsFile,
                               [] (float _percent) {

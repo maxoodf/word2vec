@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
-#include <algorithm>
+//#include <algorithm>
 
 #include "word2vec.h"
 

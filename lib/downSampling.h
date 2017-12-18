@@ -35,9 +35,6 @@ namespace w2v {
                 m_unfrequentSince(
                         static_cast<std::size_t>((m_sample / (1.5f - 0.5f * std::sqrt(5.0f))) * m_trainWords)),
                 m_freqWordsDistribution(0.0f, 1.0f) {
-
-//        assert(m_sample <= 0.0f);
-//        assert(m_words == 0);
         }
 
         /**

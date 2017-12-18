@@ -59,7 +59,8 @@ int main(int argc, char * const *argv) {
                 if ((i.first == word1) || (i.first == word2) || (i.first == word3)) {
                     continue;
                 }
-                std::cout << std::right << std::setw(19) << i.first << " " << std::left << std::setw(9) << i.second << std::endl;
+                std::cout << std::right << std::setw(19) << i.first << " "
+                          << std::left << std::setw(9) << i.second << std::endl;
             }
             std::cout << std::endl;
         } catch (const std::exception &_e) {

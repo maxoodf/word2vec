@@ -20,7 +20,7 @@ namespace w2v {
         // load stop-words
         std::vector<std::string> stopWords;
         if (_stopWordsMapper) {
-            wordReader_t<fileMapper_t> wordReader(*_stopWordsMapper.get(), _wordDelimiterChars, _endOfSentenceChars);
+            wordReader_t<fileMapper_t> wordReader(*_stopWordsMapper, _wordDelimiterChars, _endOfSentenceChars);
             std::string word;
             while (wordReader.nextWord(word)) {
                 stopWords.push_back(word);
@@ -29,13 +29,13 @@ namespace w2v {
 
         // load words and calculate their frequencies
         struct tmpWordData_t {
-            std::size_t frequency;
+            std::size_t frequency = 0;
             std::string word;
         };
         std::unordered_map<std::string, tmpWordData_t> tmpWords;
         off_t progressOffset = 0;
         if (_trainWordsMapper) {
-            wordReader_t<fileMapper_t> wordReader(*_trainWordsMapper.get(), _wordDelimiterChars, _endOfSentenceChars);
+            wordReader_t<fileMapper_t> wordReader(*_trainWordsMapper, _wordDelimiterChars, _endOfSentenceChars);
             std::string word;
             while (wordReader.nextWord(word)) {
                 if (word.empty()) {
@@ -76,10 +76,10 @@ namespace w2v {
         // prepare vector sorted by word frequencies
         std::vector<std::pair<std::string, std::size_t>> wordsFreq;
         // delimiter is the first word
-        wordsFreq.push_back(std::make_pair("</s>", 0LU));
+        wordsFreq.emplace_back(std::pair<std::string, std::size_t>("</s>", 0LU));
         for (auto const &i:tmpWords) {
             if (i.second.frequency >= _minFreq) {
-                wordsFreq.push_back(std::make_pair(i.first, i.second.frequency));
+                wordsFreq.emplace_back(std::pair<std::string, std::size_t>(i.first, i.second.frequency));
                 m_trainWords += i.second.frequency;
             }
         }

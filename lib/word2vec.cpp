@@ -78,7 +78,7 @@ namespace w2v {
                                      + "\n";
             // calc output size
             // header size
-            off_t outputSize = static_cast<off_t>(fileHeader.length() * sizeof(char));
+            auto outputSize = static_cast<off_t>(fileHeader.length() * sizeof(char));
             for (auto const &i:m_map) {
                 // size of (word + space char + vector size + size of cartridge return char)
                 outputSize += (i.first.length() + 2) * sizeof(char) + m_vectorSize * sizeof(float);

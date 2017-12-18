@@ -74,8 +74,8 @@ namespace w2v {
                             static_cast<float>(*(m_sharedData.processedWords)) / wordsPerAllThreads;
 
                     auto curAlpha = m_sharedData.trainSettings->alpha * (1 - ratio);
-                    if (curAlpha < static_cast<float>(m_sharedData.trainSettings->alpha) * 0.0001f) {
-                        curAlpha = static_cast<float>(m_sharedData.trainSettings->alpha) * 0.0001f;
+                    if (curAlpha < m_sharedData.trainSettings->alpha * 0.0001f) {
+                        curAlpha = m_sharedData.trainSettings->alpha * 0.0001f;
                     }
                     (*m_sharedData.alpha) = curAlpha;
 
@@ -103,14 +103,6 @@ namespace w2v {
 
                     threadProcessedWords++;
 
-                    /*
-                    if (m_sharedData.trainSettings->sample > 0.0f) { // subsampling...
-                        if (((std::sqrt(wordData->frequency / (m_sharedData.trainSettings->sample * m_sharedData.vocabulary->trainWords())) + 1) * (m_sharedData.trainSettings->sample * m_sharedData.vocabulary->trainWords()) / wordData->frequency)
-                            < (*m_rndSubSampling)(m_randomGenerator)) {
-                            continue; // randomly skip a frequent word
-                        }
-                    }
-                    */
                     if (m_sharedData.trainSettings->sample > 0.0f) { // down-sampling...
                         if ((*m_downSampling)(wordData->frequency, m_randomGenerator)) {
                             continue; // skip this word

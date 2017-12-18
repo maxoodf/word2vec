@@ -37,7 +37,7 @@ namespace w2v {
         bool withSG = false; ///< use Skip-Gram instead of CBOW
         std::string wordDelimiterChars = " \n,.-!?:;/\"#$%&'()*+<=>@[]\\^_`{|}~\t\v\f\r";
         std::string endOfSentenceChars = ".\n?!";
-        trainSettings_t() {}
+        trainSettings_t() = default;
     };
 
     /**
@@ -49,7 +49,7 @@ namespace w2v {
     public:
         vector_t(): std::vector<float>() {}
         /// Constructs an empty vector with size _size
-        vector_t(std::size_t _size): std::vector<float>(_size, 0.0f) {}
+        explicit vector_t(std::size_t _size): std::vector<float>(_size, 0.0f) {}
 
         /// @returns a copy of _from object
         vector_t &operator=(const vector_t &_from) {
@@ -154,7 +154,7 @@ namespace w2v {
         /// constructs a model
         model_t(): m_map(), m_errMsg() {}
         /// virtual destructor
-        virtual ~model_t() {}
+        virtual ~model_t() = default;
 
         /// pure virtual method to save model of a derived class
         virtual bool save(const std::string &_modelFile) const noexcept = 0;
@@ -294,7 +294,7 @@ namespace w2v {
     */
     class d2vModel_t: public model_t<std::size_t> {
     public:
-        d2vModel_t(uint16_t _vectorSize): model_t<std::size_t>() {
+        explicit d2vModel_t(uint16_t _vectorSize): model_t<std::size_t>() {
             m_vectorSize = _vectorSize;
         }
 
@@ -325,12 +325,13 @@ namespace w2v {
          * @param _model w2vModel_t type object of a pretrained model
          */
 
-        word2vec_t(const std::unique_ptr<w2vModel_t> &_model): vector_t(_model->vectorSize()) {}
+        explicit word2vec_t(const std::unique_ptr<w2vModel_t> &_model): vector_t(_model->vectorSize()) {}
         /** Constructs a word2vec object
          * @param _model w2vModel_t type object of a pretrained model
          * @param _word word to be converted to a vector
          */
-        word2vec_t(const std::unique_ptr<w2vModel_t> &_model, const std::string &_word): vector_t(_model->vectorSize()) {
+        word2vec_t(const std::unique_ptr<w2vModel_t> &_model, const std::string &_word):
+                vector_t(_model->vectorSize()) {
             auto i = _model->vector(_word);
             if (i != nullptr) {
                 std::copy(i->begin(), i->end(), begin());

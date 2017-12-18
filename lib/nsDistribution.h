@@ -27,7 +27,7 @@ namespace w2v {
          * Constructs a nsDistribution object with approximated probability densities powered 0.75
          * @param _input vector of probability densities for their indexes
          */
-        nsDistribution_t(const std::vector<std::size_t> &_input);
+        explicit nsDistribution_t(const std::vector<std::size_t> &_input);
 
         /**
          * Generates a random value inside of subintervals bounds
@@ -35,7 +35,7 @@ namespace w2v {
          * @returns a random value
          */
         inline std::size_t operator()(std::mt19937_64 &_randomGenerator) const noexcept {
-            return static_cast<std::size_t>((*m_nsDistribution.get())(_randomGenerator));
+            return static_cast<std::size_t>((*m_nsDistribution)(_randomGenerator));
         }
     };
 }

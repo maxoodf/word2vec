@@ -25,7 +25,7 @@ namespace w2v {
         mapper_t(): m_data() {}
         mapper_t(char *_data, off_t _size): m_data(), m_size(_size) {m_data.rwData = _data;}
         mapper_t(const char *_data, off_t _size): m_data(), m_size(_size) {m_data.roData = _data;}
-        virtual ~mapper_t() noexcept {}
+        virtual ~mapper_t() = default;
 
         /// @returns pointer to mapped data in read-only mode
         inline const char *data() const noexcept {return m_data.roData;}
@@ -44,8 +44,8 @@ namespace w2v {
          * @param _size size of a new created file (_wrFlag == true)
          * @throws std::runtime_error In case of failed file or mapping operations
         */
-        stringMapper_t(const std::string &_source): mapper_t(_source.c_str(), static_cast<off_t>(_source.length())) {}
-        ~stringMapper_t() noexcept {}
+        explicit stringMapper_t(const std::string &_source):
+                mapper_t(_source.c_str(), static_cast<off_t>(_source.length())) {}
 
         // copying prohibited
         stringMapper_t(const stringMapper_t &) = delete;
@@ -70,8 +70,8 @@ namespace w2v {
          * @param _size size of a new created file (_wrFlag must be true)
          * @throws std::runtime_error In case of failed file or mapping operations
         */
-        fileMapper_t(const std::string &_fileName, bool _wrFlag = false, off_t _size = 0);
-        ~fileMapper_t() noexcept;
+        explicit fileMapper_t(const std::string &_fileName, bool _wrFlag = false, off_t _size = 0);
+        ~fileMapper_t() final;
 
         // copying prohibited
         fileMapper_t(const fileMapper_t &) = delete;
