@@ -190,9 +190,9 @@ namespace w2v {
                 ret += _what[i] * _with[i];
             }
             if (ret > 0.0f) {
-                ret =  std::sqrt(ret);
+                return  std::sqrt(ret);
             }
-            return ret;
+            return 0.0f;
         }
 
         /**
@@ -200,10 +200,12 @@ namespace w2v {
          * @param _vec find nearest vectors for this specified vector
          * @param _nearest storage of found nearest vectors ordered descending by distance to specified vector
          * @param _amount max. amount of nearest vectors
+         * @param _minDistance min. distance between vectors
         */
         inline void nearest(const vector_t &_vec,
-                     std::vector<std::pair<key_t, float>> &_nearest,
-                     std::size_t _amount) const noexcept {
+                            std::vector<std::pair<key_t, float>> &_nearest,
+                            std::size_t _amount,
+                            float _minDistance = 0.0f) const noexcept {
             assert(m_vectorSize == _vec.size());
 
             _nearest.clear();
@@ -215,7 +217,7 @@ namespace w2v {
             float entryLevel = 0.0f;
             for (auto const &i:m_map) {
                 auto match = distance(_vec, i.second);
-                if (match > 0.9999f) { // 1.0f is not guarantied
+                if ((match > 0.9999f) || (match < _minDistance)) { // 1.0f is not guarantied
                     continue;
                 }
                 if (match > entryLevel) {
@@ -275,11 +277,11 @@ namespace w2v {
          * @returns true on successful completion or false otherwise
         */
         bool train(const trainSettings_t &_trainSettings,
-                        const std::string &_trainFile,
-                        const std::string &_stopWordsFile,
-                        vocabularyProgressCallback_t _vocabularyProgressCallback,
-                        vocabularyStatsCallback_t _vocabularyStatsCallback,
-                        trainProgressCallback_t _trainProgressCallback) noexcept;
+                   const std::string &_trainFile,
+                   const std::string &_stopWordsFile,
+                   vocabularyProgressCallback_t _vocabularyProgressCallback,
+                   vocabularyStatsCallback_t _vocabularyStatsCallback,
+                   trainProgressCallback_t _trainProgressCallback) noexcept;
 
         /// saves word vectors to file with _modelFile name
         bool save(const std::string &_modelFile) const noexcept override;
