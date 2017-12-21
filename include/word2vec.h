@@ -301,7 +301,16 @@ namespace w2v {
         }
 
         /// add/replace new _vector with unique _id to the model
-        void set(std::size_t _id, const vector_t &_vector) {
+        void set(std::size_t _id, const vector_t &_vector, bool _checkUnique = false) {
+            if (_checkUnique) {
+                for (auto const &i:m_map) {
+                    auto match = distance(_vector, i.second);
+                    if (match > 0.9999f) { // 1.0f is not guarantied
+                        return;
+                    }
+                }
+            }
+
             m_map[_id] = _vector;
             m_mapSize = m_map.size();
         }
