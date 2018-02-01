@@ -23,20 +23,26 @@ int main(int argc, char * const *argv) {
     }
 
     std::unique_ptr<w2v::w2vModel_t> model;
-    std::ifstream ifs;
     try {
         model.reset(new w2v::w2vModel_t());
         if (!model->load(argv[1])) {
             throw std::runtime_error(model->errMsg());
         }
-
-        ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        ifs.open(argv[2]);
     } catch (const std::exception &_e) {
         std::cerr << _e.what() << std::endl;
         return 2;
     } catch (...) {
         std::cerr << "unknown error" << std::endl;
+        return 2;
+    }
+
+    std::ifstream ifs;
+    try {
+//        ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        ifs.exceptions(std::ifstream::failbit);
+        ifs.open(argv[2]);
+    } catch (...) {
+        std::cerr << "Can not open file: " << argv[2] << std::endl;
         return 2;
     }
 
@@ -49,6 +55,9 @@ int main(int argc, char * const *argv) {
         std::size_t idx = 0;
         std::size_t pos = model->modelSize();
         ifs >> word1;
+        if (word1.empty()) {
+            continue;
+        }
         if (word1 == ":") {
             if (sectionAccuracy > 0.0f) {
                 sectionAccuracy = std::sqrt(sectionAccuracy / sectionSets);
@@ -62,6 +71,9 @@ int main(int argc, char * const *argv) {
             continue;
         }
         ifs >> word2 >> word3 >> word4;
+        if (word2.empty() || word3.empty() || word4.empty()) {
+            continue;
+        }
         std::transform(word1.begin(), word1.end(), word1.begin(), tolower);
         std::transform(word2.begin(), word2.end(), word2.begin(), tolower);
         std::transform(word3.begin(), word3.end(), word3.begin(), tolower);
