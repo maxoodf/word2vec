@@ -188,7 +188,7 @@ namespace w2v {
                 if (med <= 0.0f) {
                     throw std::runtime_error("failed to normalize vectors");
                 }
-                med = std::sqrt(med);
+                med = std::sqrt(med / v.size());
                 for (auto &j:v) {
                     j /= med;
                 }
@@ -308,7 +308,7 @@ namespace w2v {
         if (med <= 0.0) {
             throw std::runtime_error("doc2vec: can not create vector");
         }
-        med = std::sqrt(med);
+        med = std::sqrt(med / this->size());
         for (auto &i:(*this)) {
             i /= med;
         }

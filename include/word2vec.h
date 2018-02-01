@@ -79,7 +79,7 @@ namespace w2v {
                 if (med <= 0.0f) {
                     throw std::runtime_error("word2vec: can not create vector");
                 }
-                med = std::sqrt(med);
+                med = std::sqrt(med / this->size());
                 for (auto &i:(*this)) {
                     i /= med;
                 }
@@ -103,7 +103,7 @@ namespace w2v {
                 if (med <= 0.0f) {
                     throw std::runtime_error("word2vec: can not create vector");
                 }
-                med = std::sqrt(med);
+                med = std::sqrt(med / this->size());
                 for (auto &i:(*this)) {
                     i /= med;
                 }
@@ -190,7 +190,7 @@ namespace w2v {
                 ret += _what[i] * _with[i];
             }
             if (ret > 0.0f) {
-                return  std::sqrt(ret);
+                return  std::sqrt(ret / m_vectorSize);
             }
             return 0.0f;
         }
