@@ -11,7 +11,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "word2vec.h"
+#include "word2vec.hpp"
 
 static void usage(const char *_name) {
     std::cout

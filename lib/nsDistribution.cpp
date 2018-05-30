@@ -9,7 +9,7 @@
 #include <vector>
 #include <cmath>
 
-#include "nsDistribution.h"
+#include "nsDistribution.hpp"
 
 namespace w2v {
     nsDistribution_t::nsDistribution_t(const std::vector<std::size_t> &_input): m_nsDistribution() {

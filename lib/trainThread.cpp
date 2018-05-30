@@ -6,7 +6,7 @@
  * @copyright Apache License v.2 (http://www.apache.org/licenses/LICENSE-2.0)
 */
 
-#include "trainThread.h"
+#include "trainThread.hpp"
 
 namespace w2v {
     trainThread_t::trainThread_t(uint8_t _id, const sharedData_t &_sharedData) :

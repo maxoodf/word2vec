@@ -13,10 +13,10 @@
 #include <vector>
 #include <functional>
 
-#include "word2vec.h"
-#include "wordReader.h"
-#include "vocabulary.h"
-#include "trainThread.h"
+#include "word2vec.hpp"
+#include "wordReader.hpp"
+#include "vocabulary.hpp"
+#include "trainThread.hpp"
 
 namespace w2v {
     /**

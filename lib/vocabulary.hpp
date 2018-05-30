@@ -14,8 +14,8 @@
 #include <unordered_map>
 #include <algorithm>
 
-#include "word2vec.h"
-#include "mapper.h"
+#include "word2vec.hpp"
+#include "mapper.hpp"
 
 namespace w2v {
     /**

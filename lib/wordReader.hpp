@@ -12,7 +12,7 @@
 #include <string>
 #include <cstring>
 
-#include "mapper.h"
+#include "mapper.hpp"
 
 namespace w2v {
     /**

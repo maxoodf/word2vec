@@ -6,10 +6,10 @@
  * @copyright Apache License v.2 (http://www.apache.org/licenses/LICENSE-2.0)
 */
 
-#include "word2vec.h"
-#include "wordReader.h"
-#include "vocabulary.h"
-#include "trainer.h"
+#include "word2vec.hpp"
+#include "wordReader.hpp"
+#include "vocabulary.hpp"
+#include "trainer.hpp"
 
 namespace w2v {
     bool w2vModel_t::train(const trainSettings_t &_trainSettings,

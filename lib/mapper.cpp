@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <cstring>
 
-#include "mapper.h"
+#include "mapper.hpp"
 
 namespace w2v {
     fileMapper_t::fileMapper_t(const std::string &_fileName, bool _wrFlag, off_t _size):

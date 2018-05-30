@@ -9,7 +9,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "word2vec.h"
+#include "word2vec.hpp"
 
 
 /*

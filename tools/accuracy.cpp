@@ -13,7 +13,7 @@
 #include <iomanip>
 #include <algorithm>
 
-#include "word2vec.h"
+#include "word2vec.hpp"
 
 int main(int argc, char * const *argv) {
     if (argc != 3) {

@@ -6,7 +6,7 @@
  * @copyright Apache License v.2 (http://www.apache.org/licenses/LICENSE-2.0)
 */
 
-#include "trainer.h"
+#include "trainer.hpp"
 
 namespace w2v {
     trainer_t::trainer_t(const std::shared_ptr<trainSettings_t> &_trainSettings,

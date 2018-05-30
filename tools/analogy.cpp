@@ -11,7 +11,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "word2vec.h"
+#include "word2vec.hpp"
 
 int main(int argc, char * const *argv) {
     if (argc != 2) {

@@ -237,7 +237,7 @@ namespace w2v {
             }
         }
 
-        /// @returns vecor size of model
+        /// @returns vector size of model
         inline uint16_t vectorSize() const noexcept {return m_vectorSize;}
         /// @returns model size (number of stored vectors)
         inline std::size_t modelSize() const noexcept {return m_mapSize;}

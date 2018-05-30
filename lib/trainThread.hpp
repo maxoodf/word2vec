@@ -16,12 +16,12 @@
 #include <functional>
 #include <vector>
 
-#include "word2vec.h"
-#include "wordReader.h"
-#include "vocabulary.h"
-#include "huffmanTree.h"
-#include "nsDistribution.h"
-#include "downSampling.h"
+#include "word2vec.hpp"
+#include "wordReader.hpp"
+#include "vocabulary.hpp"
+#include "huffmanTree.hpp"
+#include "nsDistribution.hpp"
+#include "downSampling.hpp"
 
 namespace w2v {
     /**

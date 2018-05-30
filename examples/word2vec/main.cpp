@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "word2vec.h"
+#include "word2vec.hpp"
 
 int main(int argc, char * const *argv) {
     // First argument is a model file name

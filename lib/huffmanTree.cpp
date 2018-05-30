@@ -9,7 +9,7 @@
 #include <vector>
 #include <queue>
 
-#include "huffmanTree.h"
+#include "huffmanTree.hpp"
 
 namespace w2v {
     void huffmanTree_t::buildTree(const std::vector<std::size_t> &_input, std::shared_ptr<node_t> &_tree) const {

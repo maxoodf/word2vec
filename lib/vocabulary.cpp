@@ -6,8 +6,8 @@
  * @copyright Apache License v.2 (http://www.apache.org/licenses/LICENSE-2.0)
 */
 
-#include "vocabulary.h"
-#include "wordReader.h"
+#include "vocabulary.hpp"
+#include "wordReader.hpp"
 
 namespace w2v {
     vocabulary_t::vocabulary_t(std::shared_ptr<fileMapper_t> &_trainWordsMapper,
