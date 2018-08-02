@@ -162,7 +162,9 @@ namespace w2v {
                 // get word
                 word.clear();
                 while ((ch = (*(input.data() + offset))) != ' ') {
-                    word += ch;
+                    if (ch != '\n') {
+                        word += ch;
+                    }
                     // move to the next char and check boundaries
                     if (++offset >= input.size()) {
                         throw std::runtime_error(wrongFormatErrMsg);
@@ -170,7 +172,7 @@ namespace w2v {
                 }
 
                 // skip last ' ' char and check boundaries
-                if (static_cast<off_t>(++offset + m_vectorSize * sizeof(float) + sizeof(char)) > input.size()) {
+                if (static_cast<off_t>(++offset + m_vectorSize * sizeof(float)) > input.size()) {
                     throw std::runtime_error(wrongFormatErrMsg);
                 }
 
@@ -178,7 +180,7 @@ namespace w2v {
                 auto &v = m_map[word];
                 v.resize(m_vectorSize);
                 std::memcpy(v.data(), input.data() + offset, m_vectorSize * sizeof(float));
-                offset += m_vectorSize * sizeof(float) + sizeof(char); // vector size + '\n' char
+                offset += m_vectorSize * sizeof(float); // vector size
 
                 // normalize vector
                 float med = 0.0f;

@@ -6,8 +6,8 @@
  * @copyright Apache License v.2 (http://www.apache.org/licenses/LICENSE-2.0)
 */
 
-#ifndef WORD2VEC_WORD2VEC_H
-#define WORD2VEC_WORD2VEC_H
+#ifndef WORD2VEC_WORD2VEC_HPP
+#define WORD2VEC_WORD2VEC_HPP
 
 #include <cassert>
 #include <string>
@@ -367,4 +367,4 @@ namespace w2v {
     };
 
 }
-#endif // WORD2VEC_WORD2VEC_H
+#endif // WORD2VEC_WORD2VEC_HPP

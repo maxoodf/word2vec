@@ -15,6 +15,8 @@ endif()
 set(PRJ_SRCS
         ${PROJECT_INCLUDE_DIR}/word2vec.hpp
         ${PROJECT_SOURCE_DIR}/word2vec.cpp
+        ${PROJECT_INCLUDE_DIR}/word2vec.h
+        ${PROJECT_SOURCE_DIR}/c_binding.cpp
         ${PROJECT_SOURCE_DIR}/mapper.hpp
         ${PROJECT_SOURCE_DIR}/mapper.cpp
         ${PROJECT_SOURCE_DIR}/wordReader.hpp
