@@ -156,6 +156,9 @@ namespace w2v {
         /// virtual destructor
         virtual ~model_t() = default;
 
+        /// Direct access to the word-vector map
+        const map_t &map() {return m_map;}
+
         /// pure virtual method to save model of a derived class
         virtual bool save(const std::string &_modelFile) const noexcept = 0;
         /// pure virtual method to load model of a derived class
@@ -335,8 +338,8 @@ namespace w2v {
         /** Constructs an empty word2vec object
          * @param _model w2vModel_t type object of a pretrained model
          */
-
         explicit word2vec_t(const std::unique_ptr<w2vModel_t> &_model): vector_t(_model->vectorSize()) {}
+
         /** Constructs a word2vec object
          * @param _model w2vModel_t type object of a pretrained model
          * @param _word word to be converted to a vector
