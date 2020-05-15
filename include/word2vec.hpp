@@ -51,18 +51,8 @@ namespace w2v {
         /// Constructs an empty vector with size _size
         explicit vector_t(std::size_t _size): std::vector<float>(_size, 0.0f) {}
 
-        /// @returns a copy of _from object
-        vector_t &operator=(const vector_t &_from) {
-            assert(empty() || (size() == _from.size()));
-
-            if (this != &_from) {
-                if (empty()) {
-                    resize(_from.size(), 0);
-                }
-                std::copy(_from.begin(), _from.end(), begin());
-            }
-            return *this;
-        }
+        /// Constructs a vector from std::vector
+        explicit vector_t(const std::vector<float> &_vector): std::vector<float>(_vector) {}
 
         /// @returns summarized w2vBase object
         vector_t &operator+=(const vector_t &_from) {
