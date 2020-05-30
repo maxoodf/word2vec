@@ -12,6 +12,7 @@
   - OSX/Clang 3.4+
   - FreeBSD/Clang 3.4+
   - Windows/MinGW (GCC 6.3)
+- ***R wrapper*** is available [here](https://github.com/bnosac/word2vec)
 
 ### Building
 You will need C++11 compatible compiler and cmake 3.1 or higher.
