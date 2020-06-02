@@ -11,6 +11,7 @@
 
 #include <string>
 #include <cstring>
+#include <stdexcept>
 
 #include "mapper.hpp"
 

@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
 
 #include "word2vec.hpp"
 

@@ -6,6 +6,8 @@
  * @copyright Apache License v.2 (http://www.apache.org/licenses/LICENSE-2.0)
 */
 
+#include <stdexcept>
+
 #include "word2vec.hpp"
 #include "wordReader.hpp"
 #include "vocabulary.hpp"

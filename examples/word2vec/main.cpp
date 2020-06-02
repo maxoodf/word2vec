@@ -7,6 +7,7 @@
 */
 
 #include <iostream>
+#include <stdexcept>
 
 #include "word2vec.hpp"
 

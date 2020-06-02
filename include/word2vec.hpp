@@ -17,6 +17,7 @@
 #include <memory>
 #include <functional>
 #include <cmath>
+#include <stdexcept>
 
 namespace w2v {
     /**

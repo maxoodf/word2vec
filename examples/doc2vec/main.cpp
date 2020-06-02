@@ -8,9 +8,9 @@
 
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 #include "word2vec.hpp"
-
 
 /*
  * Let's try to find news articles about Orly airport shooting accident.

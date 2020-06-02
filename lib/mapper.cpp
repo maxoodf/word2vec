@@ -16,7 +16,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <cerrno>
-
 #include <stdexcept>
 #include <cstring>
 
@@ -68,7 +67,11 @@ namespace w2v {
     }
 
     fileMapper_t::~fileMapper_t() {
+#if defined(sun) || defined(__sun)
+        munmap(m_data.rwData, static_cast<size_t>(m_size));
+#else
         munmap(reinterpret_cast<void *>(m_data.rwData), static_cast<size_t>(m_size));
+#endif
         close(m_fd);
     }
 }
