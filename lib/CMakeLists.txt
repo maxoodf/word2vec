@@ -7,7 +7,7 @@ include_directories("${PROJECT_INCLUDE_DIR}")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(ADD_SRCS
-            ${PROJECT_SOURCE_DIR}/win/mman.hpp
+            ${PROJECT_SOURCE_DIR}/win/mman.h
             ${PROJECT_SOURCE_DIR}/win/mman.cpp
             )
 endif()
